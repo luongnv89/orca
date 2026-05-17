@@ -12,6 +12,7 @@
 // docs/design/agent-status-over-ssh.md §3 ("relay normalizes; Orca routes").
 import type { IncomingMessage } from 'http'
 import { randomUUID } from 'crypto'
+import { homedir } from 'os'
 import {
   chmodSync,
   closeSync,
@@ -246,6 +247,13 @@ function extractPromptText(hookPayload: Record<string, unknown>): string {
   return ''
 }
 
+function stripGrokUserQueryWrapper(promptText: string): string {
+  const match = promptText.match(/^<user_query>([\s\S]*?)(?:<\/user_query>)?$/)
+  // Why: Grok emits the submitted prompt wrapped in its internal
+  // `<user_query>` envelope; the status cache should hold the user text.
+  return match ? match[1].trim() : promptText
+}
+
 function resolvePrompt(
   state: HookListenerState,
   paneKey: string,
@@ -465,6 +473,8 @@ function extractToolResponseText(toolResponse: unknown): string | undefined {
 
 const TRANSCRIPT_CHUNK_BYTES = 64 * 1024
 const TRANSCRIPT_MAX_SCAN_BYTES = 4 * 1024 * 1024
+const GROK_SESSION_ID_MAX_LENGTH = 128
+const GROK_SESSION_CWD_MAX_LENGTH = 4096
 
 function extractAssistantTextFromLine(line: string): string | undefined {
   let entry: unknown
@@ -487,7 +497,8 @@ function extractAssistantTextFromLine(line: string): string | undefined {
     }
   }
   const nestedMessage = record.message as Record<string, unknown> | undefined
-  const role = record.role ?? nestedMessage?.role
+  const role =
+    record.role ?? nestedMessage?.role ?? (record.type === 'assistant' ? 'assistant' : undefined)
   if (role !== 'assistant') {
     return undefined
   }
@@ -517,6 +528,96 @@ function readLastAssistantFromTranscript(transcriptPath: unknown): string | unde
     return undefined
   }
   return readLastAssistantFromTranscriptOnce(transcriptPath)
+}
+
+function parseHookBodyPayloadRecord(body: unknown): Record<string, unknown> | null {
+  if (typeof body !== 'object' || body === null) {
+    return null
+  }
+  const rawPayload = (body as Record<string, unknown>).payload
+  const payload =
+    typeof rawPayload === 'string'
+      ? (() => {
+          try {
+            return JSON.parse(rawPayload) as unknown
+          } catch {
+            return null
+          }
+        })()
+      : rawPayload
+  return typeof payload === 'object' && payload !== null
+    ? (payload as Record<string, unknown>)
+    : null
+}
+
+function readBoundedString(
+  record: Record<string, unknown>,
+  keys: readonly string[],
+  maxLength: number
+): string | undefined {
+  const value = readFirstString(record, keys)
+  return value && value.length <= maxLength ? value : undefined
+}
+
+function isSafeGrokSessionId(sessionId: string): boolean {
+  return /^[A-Za-z0-9_-]+$/.test(sessionId) && sessionId.length <= GROK_SESSION_ID_MAX_LENGTH
+}
+
+function getGrokChatHistoryPath(hookPayload: Record<string, unknown>): string | undefined {
+  const sessionId = readBoundedString(
+    hookPayload,
+    ['sessionId', 'session_id'],
+    GROK_SESSION_ID_MAX_LENGTH
+  )
+  const cwd = readBoundedString(
+    hookPayload,
+    ['cwd', 'workspaceRoot', 'workspace_root'],
+    GROK_SESSION_CWD_MAX_LENGTH
+  )
+  if (!sessionId || !cwd || !isSafeGrokSessionId(sessionId)) {
+    return undefined
+  }
+  return join(
+    homedir(),
+    '.grok',
+    'sessions',
+    encodeURIComponent(cwd),
+    sessionId,
+    'chat_history.jsonl'
+  )
+}
+
+function readLastAssistantFromGrokChatHistory(
+  hookPayload: Record<string, unknown>
+): string | undefined {
+  const chatHistoryPath = getGrokChatHistoryPath(hookPayload)
+  if (!chatHistoryPath) {
+    return undefined
+  }
+  return readLastAssistantFromTranscriptOnce(chatHistoryPath)
+}
+
+export function hasPendingAgentResultText(source: AgentHookSource, body: unknown): boolean {
+  const record = parseHookBodyPayloadRecord(body)
+  if (!record) {
+    return false
+  }
+  const directMessage =
+    record.last_assistant_message ?? record.lastAssistantMessage ?? record.message
+  if (typeof directMessage === 'string' && directMessage.trim().length > 0) {
+    return false
+  }
+  if (source === 'copilot') {
+    const transcriptPath = record.transcript_path ?? record.transcriptPath
+    return typeof transcriptPath === 'string' && transcriptPath.trim().length > 0
+  }
+  if (
+    source === 'grok' &&
+    isGrokEvent(record.hookEventName ?? record.hook_event_name, 'stop', 'session_end')
+  ) {
+    return getGrokChatHistoryPath(record) !== undefined
+  }
+  return false
 }
 
 function readLastAssistantFromTranscriptOnce(transcriptPath: string): string | undefined {
@@ -1078,6 +1179,10 @@ function extractGrokToolFields(
     )
     if (fromTranscript) {
       return { lastAssistantMessage: fromTranscript }
+    }
+    const fromChatHistory = readLastAssistantFromGrokChatHistory(hookPayload)
+    if (fromChatHistory) {
+      return { lastAssistantMessage: fromChatHistory }
     }
   }
   return {}
@@ -1696,7 +1801,9 @@ function normalizeGrokEvent(
 
   // Why: Grok Notification.message is status UI text, not necessarily the
   // user's prompt. Preserve the cached UserPromptSubmit prompt for the row.
-  const effectivePrompt = isGrokEvent(eventName, 'notification') ? '' : promptText
+  const effectivePrompt = isGrokEvent(eventName, 'notification')
+    ? ''
+    : stripGrokUserQueryWrapper(promptText)
 
   return parseAgentStatusPayload(
     JSON.stringify({
