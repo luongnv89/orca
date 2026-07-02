@@ -404,6 +404,37 @@ export function GeneralEditorSettingsSection({
           }
         />
       </SearchableSetting>
+
+      {/* Light preview toggle is intentionally after review notes; both are
+          markdown-editor surface controls and keep the editor subsection compact. */}
+      <SearchableSetting
+        title={translate(
+          'auto.components.settings.GeneralEditorSettingsSection.7a2b9c4e1f',
+          'Markdown Preview Light Background'
+        )}
+        description={translate(
+          'auto.components.settings.GeneralEditorSettingsSection.3d8f1a6b2e',
+          'Use a light reading background for markdown file previews (only affects the preview surface).'
+        )}
+        keywords={['markdown', 'preview', 'light', 'background', 'reading']}
+      >
+        <SettingsSwitchRow
+          label={translate(
+            'auto.components.settings.GeneralEditorSettingsSection.7a2b9c4e1f',
+            'Markdown Preview Light Background'
+          )}
+          description={translate(
+            'auto.components.settings.GeneralEditorSettingsSection.3d8f1a6b2e',
+            'Use a light reading background for markdown file previews (only affects the preview surface).'
+          )}
+          checked={!!settings.markdownPreviewLightBackground}
+          onChange={() =>
+            updateSettings({
+              markdownPreviewLightBackground: !settings.markdownPreviewLightBackground
+            })
+          }
+        />
+      </SearchableSetting>
     </section>
   )
 }

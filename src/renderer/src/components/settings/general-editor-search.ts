@@ -95,5 +95,22 @@ export const getGeneralEditorSearchEntries = createLocalizedCatalog(() => [
       ),
       ...translateSearchKeyword('auto.components.settings.general.search.baa263d6d8', 'agents')
     ]
+  },
+  {
+    title: translate(
+      'auto.components.settings.general.search.markdownPreviewLightBackground',
+      'Markdown Preview Light Background'
+    ),
+    description: translate(
+      'auto.components.settings.general.search.9f2e4c1a7b',
+      'Use a light reading background for markdown file previews.'
+    ),
+    keywords: [
+      ...translateSearchKeyword('auto.components.settings.general.search.d05f629d2c', 'markdown'),
+      ...translateSearchKeyword('auto.components.settings.general.search.8c3d1f9e2a', 'preview'),
+      ...translateSearchKeyword('auto.components.settings.general.search.5e7b2d4f1c', 'light'),
+      ...translateSearchKeyword('auto.components.settings.general.search.2a9c6e8b3d', 'background'),
+      ...translateSearchKeyword('auto.components.settings.general.search.4f1a7c9e5b', 'reading')
+    ]
   }
 ])
