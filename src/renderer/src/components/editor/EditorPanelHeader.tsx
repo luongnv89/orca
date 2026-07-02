@@ -92,6 +92,8 @@ export function EditorPanelHeader({
   const markdownPreviewLightBackground = useAppStore(
     (s) => !!s.settings?.markdownPreviewLightBackground
   )
+  const toggleMarkdownPreviewLightBackground = (): void =>
+    updateSettings({ markdownPreviewLightBackground: !markdownPreviewLightBackground })
   const fileDiffComments = useMemo(
     () => diffComments.filter((comment) => comment.filePath === activeFile.relativePath),
     [activeFile.relativePath, diffComments]
@@ -264,11 +266,7 @@ export function EditorPanelHeader({
                     ? 'bg-accent text-foreground'
                     : 'text-muted-foreground'
                 }`}
-                onClick={() =>
-                  updateSettings({
-                    markdownPreviewLightBackground: !markdownPreviewLightBackground
-                  })
-                }
+                onClick={toggleMarkdownPreviewLightBackground}
                 aria-label={translate(
                   'auto.components.editor.EditorPanelHeader.markdownPreviewLightBackground',
                   'Markdown Preview Light Background'
@@ -300,11 +298,7 @@ export function EditorPanelHeader({
         markdownPreviewLightBackground={markdownPreviewLightBackground}
         onToggleDiffWordWrap={() => void updateSettings({ diffWordWrap: !diffWordWrap })}
         onToggleMarkdownFrontmatter={onToggleMarkdownFrontmatter}
-        onToggleMarkdownPreviewLightBackground={() =>
-          updateSettings({
-            markdownPreviewLightBackground: !markdownPreviewLightBackground
-          })
-        }
+        onToggleMarkdownPreviewLightBackground={toggleMarkdownPreviewLightBackground}
         onExportMarkdownToPdf={onExportMarkdownToPdf}
       />
     </div>
