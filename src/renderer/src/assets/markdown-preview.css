@@ -18,11 +18,118 @@
   color: #24292f;
 }
 
-/* Scope toolbar and search to light surface values when preview light mode is active. */
+/* Scope toolbar and search to light surface values when preview light mode is active.
+   Why: when app theme is dark, global --* vars are dark; these ensure the forced-light
+   preview surface and its controls remain legible and isolated (no leakage to chrome/terminal). */
 .markdown-preview.markdown-light .markdown-preview-search,
 .markdown-preview.markdown-light .markdown-review-toolbar {
   background: color-mix(in srgb, #f6f8fa 94%, white);
   border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Comprehensive light overrides for descendants (search, toolbar, headings, links,
+   checkboxes, details, tables, frontmatter) so forced light preview never inherits
+   dark app vars for contrast/visibility. Scoped to .markdown-preview.markdown-light
+   or .markdown-light to preserve strict isolation. */
+.markdown-preview.markdown-light .markdown-preview-search-field {
+  border-color: rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+}
+.markdown-preview.markdown-light .markdown-preview-search-status,
+.markdown-preview.markdown-light .markdown-preview-search-input::placeholder,
+.markdown-preview.markdown-light .markdown-preview-search-button {
+  color: #6e7781;
+}
+.markdown-preview.markdown-light .markdown-preview-search-divider {
+  background: rgba(0, 0, 0, 0.1);
+}
+.markdown-preview.markdown-light .markdown-preview-search-button:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: #24292f;
+}
+
+.markdown-preview.markdown-light .markdown-review-toolbar-button,
+.markdown-preview.markdown-light .markdown-review-icon-button {
+  color: #6e7781;
+}
+.markdown-preview.markdown-light .markdown-review-toolbar-button:hover:not(:disabled),
+.markdown-preview.markdown-light .markdown-review-toolbar-button[aria-expanded='true'],
+.markdown-preview.markdown-light .markdown-review-icon-button:hover:not(:disabled) {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: #f6f8fa;
+  color: #24292f;
+}
+.markdown-preview.markdown-light .markdown-review-count {
+  background: rgba(0, 0, 0, 0.08);
+  color: #6e7781;
+}
+
+.markdown-light .markdown-body h5 {
+  color: #6e7781;
+}
+
+.markdown-light .markdown-body .markdown-doc-link-broken {
+  color: #6e7781;
+}
+
+.markdown-preview.markdown-light .markdown-body details.orca-details > summary::before {
+  color: #6e7781;
+}
+
+/* Light checkbox rendering for contrast on white preview surface (avoids dark --foreground mix). */
+.markdown-light .markdown-body li > input[type='checkbox'] {
+  border-color: color-mix(in srgb, #24292f 55%, transparent);
+}
+.markdown-light .markdown-body li > input[type='checkbox']:checked {
+  background: #0969da;
+  border-color: #0969da;
+}
+.markdown-light .markdown-body li > input[type='checkbox']:checked::after {
+  border-color: #ffffff;
+}
+
+/* Table borders and frontmatter use light values inside forced-light surface. */
+.markdown-light .markdown-body th,
+.markdown-light .markdown-body td {
+  border-color: #d0d7de;
+}
+.markdown-preview.markdown-light .markdown-body .border-border\/60 {
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+.markdown-preview.markdown-light .markdown-body .bg-muted\/40 {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+.markdown-preview.markdown-light .markdown-body .text-muted-foreground {
+  color: #6e7781 !important;
+}
+
+/* TOC panel light treatment for visual continuity when next to light preview surface.
+   Class applied to shell so sibling panel inherits. */
+.markdown-light .markdown-toc-panel {
+  background: #f6f8fa;
+  border-right-color: rgba(0, 0, 0, 0.08);
+}
+.markdown-light .markdown-toc-header {
+  color: #6e7781;
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+.markdown-light .markdown-toc-row {
+  color: #24292f;
+}
+.markdown-light .markdown-toc-row:hover {
+  background: #f3f4f6;
+}
+.markdown-light .markdown-toc-level-button {
+  color: #6e7781;
+}
+.markdown-light .markdown-toc-level-button:hover {
+  color: #24292f;
+}
+.markdown-light .markdown-toc-empty {
+  color: #6e7781;
+}
+.markdown-light .markdown-toc-disclosure:hover {
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .markdown-preview-shell {
