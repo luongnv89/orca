@@ -204,6 +204,7 @@ export function getDefaultSettings(homedir: string): GlobalSettings {
     editorAutoSaveDelayMs: DEFAULT_EDITOR_AUTO_SAVE_DELAY_MS,
     editorMinimapEnabled: false,
     markdownReviewToolsEnabled: true,
+    markdownPreviewLightBackground: false,
     primarySelectionMiddleClickPaste: getDefaultPrimarySelectionMiddleClickPaste(),
     primarySelectionMiddleClickPasteDefaultedForLinux:
       typeof process !== 'undefined' && process.platform === 'linux',

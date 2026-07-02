@@ -2471,6 +2471,13 @@ export type GlobalSettings = {
   editorMinimapEnabled: boolean
   /** Whether local markdown review note controls and the review panel are shown. */
   markdownReviewToolsEnabled: boolean
+  /**
+   * When true, the markdown file preview uses an isolated light background for
+   * comfortable reading. Only the preview surface is affected; app chrome,
+   * terminal, and other UI follow the normal theme. Default (false) follows
+   * current app theme.
+   */
+  markdownPreviewLightBackground?: boolean
   /** Why: mirrors terminal selection-paste muscle memory without mutating the
    *  normal system clipboard; Linux and macOS enable it by default, Windows
    *  leaves middle-click semantics unchanged unless the user opts in. */
