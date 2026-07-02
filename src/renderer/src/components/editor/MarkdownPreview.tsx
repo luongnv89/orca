@@ -544,6 +544,12 @@ export default function MarkdownPreview({
     settings?.theme === 'dark' ||
     (settings?.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
 
+  // Why: the light-preview flag forces an isolated reading surface using
+  // .markdown-light only on this container; false follows app theme via isDark.
+  // Never mutates global document theme.
+  const lightPreview = !!settings?.markdownPreviewLightBackground
+  const previewThemeClass = lightPreview ? 'markdown-light' : (isDark ? 'markdown-dark' : 'markdown-light')
+
   const renderedContent = usePreserveSectionDuringExternalEdit(content, bodyRef)
 
   useEffect(() => {
@@ -1693,7 +1699,7 @@ export default function MarkdownPreview({
         ref={setRootRef}
         tabIndex={0}
         style={{ fontSize: `${editorFontSize}px` }}
-        className={`markdown-preview h-full min-h-0 overflow-auto scrollbar-editor ${isDark ? 'markdown-dark' : 'markdown-light'}`}
+        className={`markdown-preview h-full min-h-0 overflow-auto scrollbar-editor ${previewThemeClass}`}
       >
         {isSearchOpen ? (
           <div className="markdown-preview-search" onKeyDown={(event) => event.stopPropagation()}>
