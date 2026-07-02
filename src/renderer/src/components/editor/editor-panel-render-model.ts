@@ -162,6 +162,13 @@ export function getEditorPanelRenderModel({
     canShowMarkdownTableOfContents:
       resolvedLanguage === 'markdown' &&
       (hasViewModeToggle || activeFile.mode === 'markdown-preview'),
+    // Why: markdownPreviewLightBackground styles MarkdownPreview and
+    // RichMarkdownEditor. The toggle must only show where one of those two
+    // actually mounts — tied to the same render-mode decision EditorContent
+    // uses, so the control never appears over a surface it can't affect
+    // (Monaco source view has no light styling to apply).
+    isMarkdownPreviewSurface: activeFile.mode === 'markdown-preview',
+    isRichMarkdownSurface: activeFile.mode === 'edit' && inlineMarkdownRenderMode === 'rich-editor',
     canShowMarkdownPreview: canOpenMarkdownPreview({
       language: resolvedLanguage,
       mode: activeFile.mode,

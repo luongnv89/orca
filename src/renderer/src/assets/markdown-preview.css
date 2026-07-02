@@ -13,9 +13,12 @@
    exclusively to this container so the reading surface (bg + text) becomes
    light while the global app (and its CSS vars) stay in the chosen theme.
    Rules are scoped to .markdown-preview.markdown-light so they never leak. */
-.markdown-preview.markdown-light {
-  background: #ffffff;
-  color: #24292f;
+.markdown-preview-shell.markdown-light,
+.markdown-preview.markdown-light,
+.markdown-light .markdown-body,
+.markdown-preview.markdown-light .markdown-body {
+  background: #ffffff !important;
+  color: #24292f !important;
 }
 
 /* Scope toolbar and search to light surface values when preview light mode is active.

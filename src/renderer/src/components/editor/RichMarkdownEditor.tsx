@@ -72,6 +72,7 @@ export default function RichMarkdownEditor({
 }: RichMarkdownEditorProps): React.JSX.Element {
   const rootRef = useRef<HTMLDivElement | null>(null)
   const settings = useAppStore((s) => s.settings)
+  const markdownPreviewLightBackground = !!settings?.markdownPreviewLightBackground
   const editorFontZoomLevel = useAppStore((s) => s.editorFontZoomLevel)
   const activateMarkdownLink = useAppStore((s) => s.activateMarkdownLink)
   const addDiffComment = useAppStore((s) => s.addDiffComment)
@@ -348,6 +349,7 @@ export default function RichMarkdownEditor({
     <RichMarkdownEditorSurface
       editor={editor}
       editorFontZoomLevel={editorFontZoomLevel}
+      lightBackground={markdownPreviewLightBackground}
       rootRef={setRootElement}
       scrollContainerRef={scrollContainerRef}
       headerSlot={headerSlot}
