@@ -92,8 +92,9 @@ export function EditorPanelHeader({
   const markdownPreviewLightBackground = useAppStore(
     (s) => !!s.settings?.markdownPreviewLightBackground
   )
-  const toggleMarkdownPreviewLightBackground = (): void =>
-    updateSettings({ markdownPreviewLightBackground: !markdownPreviewLightBackground })
+  const toggleMarkdownPreviewLightBackground = (): void => {
+    void updateSettings({ markdownPreviewLightBackground: !markdownPreviewLightBackground })
+  }
   const fileDiffComments = useMemo(
     () => diffComments.filter((comment) => comment.filePath === activeFile.relativePath),
     [activeFile.relativePath, diffComments]
