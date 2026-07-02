@@ -13,30 +13,42 @@ import { translate } from '@/i18n/i18n'
 type EditorPanelMarkdownActionsMenuProps = {
   isMarkdown: boolean
   isDiffSurface: boolean
+  isMarkdownPreviewSurface: boolean
+  isRichMarkdownSurface: boolean
   diffWordWrap: boolean
   shouldShowMarkdownExportAction: boolean
   canExportMarkdownToPdf: boolean
   canShowMarkdownFrontmatterToggle: boolean
   markdownFrontmatterVisible: boolean
+  markdownPreviewLightBackground: boolean
   onToggleDiffWordWrap: () => void
   onToggleMarkdownFrontmatter: () => void
+  onToggleMarkdownPreviewLightBackground: () => void
   onExportMarkdownToPdf: () => void
 }
 
 export function EditorPanelMarkdownActionsMenu({
   isMarkdown,
   isDiffSurface,
+  isMarkdownPreviewSurface,
+  isRichMarkdownSurface,
   diffWordWrap,
   shouldShowMarkdownExportAction,
   canExportMarkdownToPdf,
   canShowMarkdownFrontmatterToggle,
   markdownFrontmatterVisible,
+  markdownPreviewLightBackground,
   onToggleDiffWordWrap,
   onToggleMarkdownFrontmatter,
+  onToggleMarkdownPreviewLightBackground,
   onExportMarkdownToPdf
 }: EditorPanelMarkdownActionsMenuProps): React.JSX.Element | null {
+  const isLightBackgroundEligibleSurface = isMarkdownPreviewSurface || isRichMarkdownSurface
   const hasMarkdownActions =
-    isMarkdown && (shouldShowMarkdownExportAction || canShowMarkdownFrontmatterToggle)
+    isMarkdown &&
+    (shouldShowMarkdownExportAction ||
+      canShowMarkdownFrontmatterToggle ||
+      isLightBackgroundEligibleSurface)
   if (!isDiffSurface && !hasMarkdownActions) {
     return null
   }
@@ -91,6 +103,17 @@ export function EditorPanelMarkdownActionsMenu({
             </DropdownMenuItem>
             {shouldShowMarkdownExportAction ? <DropdownMenuSeparator /> : null}
           </>
+        ) : null}
+        {isMarkdown && isLightBackgroundEligibleSurface ? (
+          <DropdownMenuCheckboxItem
+            checked={markdownPreviewLightBackground}
+            onCheckedChange={onToggleMarkdownPreviewLightBackground}
+          >
+            {translate(
+              'auto.components.editor.EditorPanelMarkdownActionsMenu.markdownPreviewLightBackground',
+              'Light background'
+            )}
+          </DropdownMenuCheckboxItem>
         ) : null}
         {shouldShowMarkdownExportAction ? (
           <DropdownMenuItem

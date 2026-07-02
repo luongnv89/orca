@@ -548,7 +548,11 @@ export default function MarkdownPreview({
   // .markdown-light only on this container; false follows app theme via isDark.
   // Never mutates global document theme.
   const lightPreview = !!settings?.markdownPreviewLightBackground
-  const previewThemeClass = lightPreview ? 'markdown-light' : (isDark ? 'markdown-dark' : 'markdown-light')
+  const previewThemeClass = lightPreview
+    ? 'markdown-light'
+    : isDark
+      ? 'markdown-dark'
+      : 'markdown-light'
   // Why: mermaid (and any future dark-aware preview children) must use light theme
   // when lightPreview forces the reading surface light, regardless of app theme.
   const effectiveIsDark = lightPreview ? false : isDark
@@ -1538,7 +1542,11 @@ export default function MarkdownPreview({
       code: ({ className, children, ...props }) => {
         if (/language-mermaid/.test(className || '')) {
           return (
-            <MermaidBlock content={String(children).trimEnd()} isDark={effectiveIsDark} htmlLabels={false} />
+            <MermaidBlock
+              content={String(children).trimEnd()}
+              isDark={effectiveIsDark}
+              htmlLabels={false}
+            />
           )
         }
         return (
@@ -1689,8 +1697,13 @@ export default function MarkdownPreview({
     wrapAnnotatedBlock
   ])
 
+  const lightSurfaceStyle = lightPreview ? { background: '#ffffff', color: '#24292f' } : undefined
+
   return (
-    <div className={`markdown-preview-shell${lightPreview ? ' markdown-light' : ''}`}>
+    <div
+      className={`markdown-preview-shell${lightPreview ? ' markdown-light' : ''}`}
+      style={lightSurfaceStyle}
+    >
       {showTableOfContents ? (
         <MarkdownTableOfContentsPanel
           items={tableOfContentsItems}
@@ -1701,8 +1714,8 @@ export default function MarkdownPreview({
       <div
         ref={setRootRef}
         tabIndex={0}
-        style={{ fontSize: `${editorFontSize}px` }}
-        className={`markdown-preview h-full min-h-0 overflow-auto scrollbar-editor ${previewThemeClass}`}
+        style={{ fontSize: `${editorFontSize}px`, ...lightSurfaceStyle }}
+        className={`markdown-preview h-full min-h-0 overflow-auto scrollbar-editor flex-1 ${previewThemeClass}`}
       >
         {isSearchOpen ? (
           <div className="markdown-preview-search" onKeyDown={(event) => event.stopPropagation()}>
@@ -1849,7 +1862,11 @@ export default function MarkdownPreview({
             ) : null}
           </div>
         ) : null}
-        <div ref={bodyRef} className="markdown-body">
+        <div
+          ref={bodyRef}
+          className={`markdown-body${lightPreview ? ' markdown-light' : ''}`}
+          style={lightSurfaceStyle}
+        >
           {/* Why: remarkFrontmatter strips front matter from normal markdown
         output. When the user opts in from the preview actions menu, render the
         raw metadata as a compact read-only block above the document body. */}

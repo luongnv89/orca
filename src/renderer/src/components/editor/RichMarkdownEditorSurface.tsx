@@ -37,6 +37,7 @@ function shouldFocusEmptyEditorFromSurfaceClick(
 type RichMarkdownEditorSurfaceProps = {
   editor: Editor | null
   editorFontZoomLevel: number
+  lightBackground: boolean
   rootRef: (node: HTMLDivElement | null) => void
   scrollContainerRef: React.RefObject<HTMLDivElement | null>
   headerSlot?: React.ReactNode
@@ -119,6 +120,7 @@ type RichMarkdownEditorSurfaceProps = {
 export function RichMarkdownEditorSurface({
   editor,
   editorFontZoomLevel,
+  lightBackground,
   rootRef,
   scrollContainerRef,
   headerSlot,
@@ -184,7 +186,7 @@ export function RichMarkdownEditorSurface({
         ref={rootRef}
         className={`rich-markdown-editor-shell ${
           reviewRailExpanded ? 'has-rich-markdown-review-notes' : ''
-        }`.trim()}
+        } ${lightBackground ? 'markdown-light' : ''}`.trim()}
         style={{ '--editor-font-zoom-level': editorFontZoomLevel } as React.CSSProperties}
       >
         <RichMarkdownToolbar
