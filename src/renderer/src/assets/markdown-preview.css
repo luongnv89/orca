@@ -9,6 +9,22 @@
   flex: 1;
 }
 
+/* Why: when markdownPreviewLightBackground is enabled we apply .markdown-light
+   exclusively to this container so the reading surface (bg + text) becomes
+   light while the global app (and its CSS vars) stay in the chosen theme.
+   Rules are scoped to .markdown-preview.markdown-light so they never leak. */
+.markdown-preview.markdown-light {
+  background: #ffffff;
+  color: #24292f;
+}
+
+/* Scope toolbar and search to light surface values when preview light mode is active. */
+.markdown-preview.markdown-light .markdown-preview-search,
+.markdown-preview.markdown-light .markdown-review-toolbar {
+  background: color-mix(in srgb, #f6f8fa 94%, white);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
 .markdown-preview-shell {
   position: relative;
   display: flex;
