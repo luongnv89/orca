@@ -548,11 +548,7 @@ export default function MarkdownPreview({
   // .markdown-light only on this container; false follows app theme via isDark.
   // Never mutates global document theme.
   const lightPreview = !!settings?.markdownPreviewLightBackground
-  const previewThemeClass = lightPreview
-    ? 'markdown-light'
-    : isDark
-      ? 'markdown-dark'
-      : 'markdown-light'
+  const previewThemeClass = lightPreview || !isDark ? 'markdown-light' : 'markdown-dark'
   // Why: mermaid (and any future dark-aware preview children) must use light theme
   // when lightPreview forces the reading surface light, regardless of app theme.
   const effectiveIsDark = lightPreview ? false : isDark
