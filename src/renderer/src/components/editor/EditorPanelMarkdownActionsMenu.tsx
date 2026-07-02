@@ -43,7 +43,8 @@ export function EditorPanelMarkdownActionsMenu({
   onToggleMarkdownPreviewLightBackground,
   onExportMarkdownToPdf
 }: EditorPanelMarkdownActionsMenuProps): React.JSX.Element | null {
-  const isLightBackgroundEligibleSurface = isMarkdownPreviewSurface || isRichMarkdownSurface
+  const isLightBackgroundEligibleSurface =
+    !isDiffSurface && (isMarkdownPreviewSurface || isRichMarkdownSurface)
   const hasMarkdownActions =
     isMarkdown &&
     (shouldShowMarkdownExportAction ||
@@ -101,19 +102,24 @@ export function EditorPanelMarkdownActionsMenu({
                     'Show front matter'
                   )}
             </DropdownMenuItem>
-            {shouldShowMarkdownExportAction ? <DropdownMenuSeparator /> : null}
+            {shouldShowMarkdownExportAction && !isLightBackgroundEligibleSurface ? (
+              <DropdownMenuSeparator />
+            ) : null}
           </>
         ) : null}
         {isMarkdown && isLightBackgroundEligibleSurface ? (
-          <DropdownMenuCheckboxItem
-            checked={markdownPreviewLightBackground}
-            onCheckedChange={onToggleMarkdownPreviewLightBackground}
-          >
-            {translate(
-              'auto.components.editor.EditorPanelMarkdownActionsMenu.markdownPreviewLightBackground',
-              'Light background'
-            )}
-          </DropdownMenuCheckboxItem>
+          <>
+            <DropdownMenuCheckboxItem
+              checked={markdownPreviewLightBackground}
+              onCheckedChange={onToggleMarkdownPreviewLightBackground}
+            >
+              {translate(
+                'auto.components.editor.EditorPanelMarkdownActionsMenu.markdownPreviewLightBackground',
+                'Light background'
+              )}
+            </DropdownMenuCheckboxItem>
+            {shouldShowMarkdownExportAction ? <DropdownMenuSeparator /> : null}
+          </>
         ) : null}
         {shouldShowMarkdownExportAction ? (
           <DropdownMenuItem

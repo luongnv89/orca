@@ -5163,9 +5163,7 @@
           "8f1afdfbd8": "Diff Word Wrap",
           "4aa4d9fb73": "Wrap long lines in diff editors instead of requiring horizontal scrolling.",
           "bf16ef0af2": "Off",
-          "3f6892f307": "On",
-          "7a2b9c4e1f": "Markdown Preview Light Background",
-          "3d8f1a6b2e": "Use a light reading background for markdown file previews (only affects the preview surface)."
+          "3f6892f307": "On"
         },
         "AdvancedNetworkSettingsSection": {
           "3e431564b5": "localhost, 127.0.0.1, *.internal",
@@ -7455,9 +7453,7 @@
             "161a86a9da": "Confirm before closing pinned tabs",
             "8e593f04fc": "Show a confirmation dialog before a pinned tab is closed.",
             "defaultProjectRuntime": "Default Project Runtime",
-            "defaultProjectRuntimeDescription": "Choose the runtime inherited by local Windows projects.",
-            "markdownPreviewLightBackground": "Markdown Preview Light Background",
-            "9f2e4c1a7b": "Use a light reading background for markdown file previews."
+            "defaultProjectRuntimeDescription": "Choose the runtime inherited by local Windows projects."
           }
         },
         "git": {

@@ -5163,9 +5163,7 @@
           "8f1afdfbd8": "Ajuste de palabras diferencial",
           "4aa4d9fb73": "Ajuste líneas largas en editores de diferencias en lugar de requerir desplazamiento horizontal.",
           "bf16ef0af2": "Apagado",
-          "3f6892f307": "En",
-          "7a2b9c4e1f": "Markdown Preview Light Background",
-          "3d8f1a6b2e": "Use a light reading background for markdown file previews (only affects the preview surface)."
+          "3f6892f307": "En"
         },
         "AdvancedNetworkSettingsSection": {
           "3e431564b5": "host local, 127.0.0.1, *.interno",
@@ -7418,9 +7416,7 @@
             "161a86a9da": "Confirmar antes de cerrar pestañas fijadas",
             "8e593f04fc": "Muestra un diálogo de confirmación antes de cerrar una pestaña fijada.",
             "defaultProjectRuntime": "Default Project Runtime",
-            "defaultProjectRuntimeDescription": "Choose the runtime inherited by local Windows projects.",
-            "markdownPreviewLightBackground": "Markdown Preview Light Background",
-            "9f2e4c1a7b": "Use a light reading background for markdown file previews."
+            "defaultProjectRuntimeDescription": "Choose the runtime inherited by local Windows projects."
           }
         },
         "git": {

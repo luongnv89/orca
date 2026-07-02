@@ -5148,9 +5148,7 @@
           "8f1afdfbd8": "差分ワードラップ",
           "4aa4d9fb73": "水平スクロールを必要とせずに、差分エディターで長い行を折り返します。",
           "bf16ef0af2": "オフ",
-          "3f6892f307": "オン",
-          "7a2b9c4e1f": "Markdown Preview Light Background",
-          "3d8f1a6b2e": "Use a light reading background for markdown file previews (only affects the preview surface)."
+          "3f6892f307": "オン"
         },
         "AdvancedNetworkSettingsSection": {
           "3e431564b5": "ローカルホスト、127.0.0.1、*.internal",
@@ -7440,9 +7438,7 @@
             "161a86a9da": "ピン留めしたタブを閉じる前に確認",
             "8e593f04fc": "ピン留めしたタブを閉じる前に確認ダイアログを表示します。",
             "defaultProjectRuntime": "Default Project Runtime",
-            "defaultProjectRuntimeDescription": "Choose the runtime inherited by local Windows projects.",
-            "markdownPreviewLightBackground": "Markdown Preview Light Background",
-            "9f2e4c1a7b": "Use a light reading background for markdown file previews."
+            "defaultProjectRuntimeDescription": "Choose the runtime inherited by local Windows projects."
           }
         },
         "git": {
