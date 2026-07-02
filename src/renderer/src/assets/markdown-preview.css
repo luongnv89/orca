@@ -132,6 +132,97 @@
   background: rgba(0, 0, 0, 0.06);
 }
 
+/* Why: complete isolation for the light reading surface (annotations, composer, diff comment cards, actions pill, copy buttons, TOC icons and all descendants) when markdownPreviewLightBackground enabled. No dark cards or low-contrast elements inside the preview area. Annotation/composer/diff cards use var(--editor-surface) etc (dark on light when app theme dark). .code-block-copy-btn hover used muted/accent vars. TOC ListTree/Chevron use text-muted-foreground. Override with explicit light values + !important for var/tailwind descendants. Scoped to .markdown-light (applied to shell+preview) + .markdown-preview.markdown-light. */
+.markdown-light .text-muted-foreground,
+.markdown-preview.markdown-light .text-muted-foreground {
+  color: #6e7781 !important;
+}
+
+/* Force via added markdown-toc-icon class on ListTree/Chevron (per isolation pass) */
+.markdown-light .markdown-toc-icon {
+  color: #6e7781 !important;
+}
+
+.markdown-light .orca-diff-comment-card,
+.markdown-preview.markdown-light .orca-diff-comment-card {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.04) !important;
+}
+
+.markdown-light .orca-diff-comment-actions-pill,
+.markdown-preview.markdown-light .orca-diff-comment-actions-pill {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.markdown-light .orca-diff-comment-pill-btn,
+.markdown-preview.markdown-light .orca-diff-comment-pill-btn {
+  color: #6e7781;
+}
+.markdown-light .orca-diff-comment-pill-btn:hover,
+.markdown-preview.markdown-light .orca-diff-comment-pill-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #24292f;
+}
+
+.markdown-light .markdown-annotation-composer,
+.markdown-preview.markdown-light .markdown-annotation-composer {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  color: #24292f;
+}
+
+.markdown-light .markdown-annotation-card.is-active > .orca-diff-comment-card,
+.markdown-preview.markdown-light .markdown-annotation-card.is-active > .orca-diff-comment-card {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.markdown-light .orca-diff-comment-popover,
+.markdown-preview.markdown-light .orca-diff-comment-popover,
+.markdown-light .orca-diff-comment-popover-textarea,
+.markdown-preview.markdown-light .orca-diff-comment-popover-textarea {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  color: #24292f !important;
+}
+
+.markdown-light .orca-diff-comment-popover-label,
+.markdown-preview.markdown-light .orca-diff-comment-popover-label {
+  color: #6e7781;
+}
+
+.markdown-light .orca-diff-comment-body,
+.markdown-preview.markdown-light .orca-diff-comment-body {
+  color: #24292f;
+}
+
+/* code-block-copy-btn hover on light code blocks (inside forced light preview) */
+.markdown-preview.markdown-light .code-block-copy-btn {
+  color: #6e7781;
+}
+.markdown-preview.markdown-light .code-block-copy-btn:hover {
+  background: #f3f4f6;
+  color: #24292f;
+}
+
+/* Annotation rail add button inside light preview surface */
+.markdown-preview.markdown-light .markdown-annotation-add,
+.markdown-light .markdown-annotation-add {
+  background: #ffffff;
+  color: #6e7781;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+.markdown-preview.markdown-light .markdown-annotation-add:hover,
+.markdown-light .markdown-annotation-add:hover {
+  background: #f3f4f6;
+  color: #24292f;
+}
+
 .markdown-preview-shell {
   position: relative;
   display: flex;
