@@ -174,7 +174,9 @@ export function RichMarkdownEditorSurface({
   onCloseTableOfContents
 }: RichMarkdownEditorSurfaceProps): React.JSX.Element {
   return (
-    <div className="rich-markdown-editor-layout">
+    <div
+      className={`rich-markdown-editor-layout ${lightBackground ? 'markdown-light' : ''}`.trim()}
+    >
       {showTableOfContents ? (
         <MarkdownTableOfContentsPanel
           items={tableOfContentsItems}
