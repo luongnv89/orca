@@ -549,6 +549,9 @@ export default function MarkdownPreview({
   // Never mutates global document theme.
   const lightPreview = !!settings?.markdownPreviewLightBackground
   const previewThemeClass = lightPreview ? 'markdown-light' : (isDark ? 'markdown-dark' : 'markdown-light')
+  // Why: mermaid (and any future dark-aware preview children) must use light theme
+  // when lightPreview forces the reading surface light, regardless of app theme.
+  const effectiveIsDark = lightPreview ? false : isDark
 
   const renderedContent = usePreserveSectionDuringExternalEdit(content, bodyRef)
 
@@ -1535,7 +1538,7 @@ export default function MarkdownPreview({
       code: ({ className, children, ...props }) => {
         if (/language-mermaid/.test(className || '')) {
           return (
-            <MermaidBlock content={String(children).trimEnd()} isDark={isDark} htmlLabels={false} />
+            <MermaidBlock content={String(children).trimEnd()} isDark={effectiveIsDark} htmlLabels={false} />
           )
         }
         return (
@@ -1665,7 +1668,7 @@ export default function MarkdownPreview({
   }, [
     filePath,
     activateMarkdownLink,
-    isDark,
+    effectiveIsDark,
     isMac,
     imageRuntimeContext,
     getMarkdownCommentsForRange,
@@ -1687,7 +1690,7 @@ export default function MarkdownPreview({
   ])
 
   return (
-    <div className="markdown-preview-shell">
+    <div className={`markdown-preview-shell${lightPreview ? ' markdown-light' : ''}`}>
       {showTableOfContents ? (
         <MarkdownTableOfContentsPanel
           items={tableOfContentsItems}

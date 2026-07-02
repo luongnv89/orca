@@ -293,6 +293,9 @@ describe('MarkdownPreview light background flag (isolated surface)', () => {
     expect(preview?.className).toContain('markdown-light')
     // does not have dark
     expect(preview?.className).not.toContain('markdown-dark')
+    // TOC shell receives light class too for visual continuity (see UI review)
+    const shell = containerEl.querySelector('.markdown-preview-shell')
+    expect(shell?.className).toContain('markdown-light')
   })
 
   it('uses markdown-light when app is light and flag is unset (follows theme)', async () => {
