@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach, type Mock } from 'vitest'
 import type { Worktree } from '../../../../shared/types'
 import {
   decodeMarkdownPreviewAnchor,
@@ -18,17 +18,22 @@ import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../../shared/constants'
 
 // Mocks must be hoisted before any imports that use them.
 vi.mock('@/store', () => {
-  const useAppStore: any = vi.fn()
+  const useAppStore = vi.fn()
   return { useAppStore }
 })
-vi.mock('@/store/slices/worktree-helpers', () => ({ findWorktreeById: () => null }))
-vi.mock('@/runtime/runtime-rpc-client', () => ({ settingsForRuntimeOwner: (s: any) => s }))
-vi.mock('@/runtime/runtime-file-client', () => ({ statRuntimePath: vi.fn(async () => ({ isDirectory: false })) }))
+vi.mock('@/runtime/runtime-rpc-client', () => ({
+  settingsForRuntimeOwner: (s: unknown) => s
+}))
+vi.mock('@/runtime/runtime-file-client', () => ({
+  statRuntimePath: vi.fn(async () => ({ isDirectory: false }))
+}))
 vi.mock('@/lib/connection-context', () => ({ getConnectionId: () => null }))
 vi.mock('@/i18n/i18n', () => ({ translate: (_k: string, fb: string) => fb }))
 vi.mock('./useLocalImageSrc', () => ({ useLocalImageSrc: (src?: string) => src }))
 vi.mock('./MermaidBlock', () => ({ default: () => null }))
-vi.mock('./CodeBlockCopyButton', () => ({ default: ({ children }: { children: any }) => children }))
+vi.mock('./CodeBlockCopyButton', () => ({
+  default: ({ children }: { children: React.ReactNode }) => children
+}))
 vi.mock('../diff-comments/DiffCommentCard', () => ({ DiffCommentCard: () => null }))
 vi.mock('./NotesSendMenu', () => ({ NotesSendMenu: () => null }))
 vi.mock('./MarkdownTableOfContentsPanel', () => ({ MarkdownTableOfContentsPanel: () => null }))
@@ -38,7 +43,7 @@ vi.mock('./usePreserveSectionDuringExternalEdit', () => ({
 
 import MarkdownPreview from './MarkdownPreview'
 import { useAppStore } from '@/store'
-import { createRoot } from 'react-dom/client'
+import { createRoot, type Root } from 'react-dom/client'
 import { act } from 'react'
 import * as React from 'react'
 
@@ -212,9 +217,11 @@ const mockSettingsBase = {
 }
 
 let containerEl: HTMLDivElement
-let root: any
+let root: Root | null = null
 
-function setupStore(overrides: { markdownPreviewLightBackground?: boolean; theme?: 'dark' | 'light' | 'system' } = {}) {
+function setupStore(
+  overrides: { markdownPreviewLightBackground?: boolean; theme?: 'dark' | 'light' | 'system' } = {}
+) {
   const settings = { ...mockSettingsBase, ...overrides }
   const storeState = {
     settings,
@@ -234,9 +241,14 @@ function setupStore(overrides: { markdownPreviewLightBackground?: boolean; theme
     activeFileIdByWorktree: {},
     editorFontZoomLevel: 0
   }
-  vi.mocked(useAppStore).mockImplementation((selector: any) => selector(storeState))
+  // Store fixture is intentionally partial (only fields this component reads),
+  // so the mock is typed against `unknown` rather than the full AppState shape.
+  const mockedUseAppStore = useAppStore as unknown as Mock<
+    (selector: (state: unknown) => unknown) => unknown
+  >
+  mockedUseAppStore.mockImplementation((selector) => selector(storeState))
   // also support getState if used
-  ;(useAppStore as any).getState = () => storeState
+  Object.assign(useAppStore, { getState: () => storeState })
   return storeState
 }
 
@@ -262,7 +274,7 @@ describe('MarkdownPreview light background flag (isolated surface)', () => {
     await act(async () => {
       root = createRoot(containerEl)
       root.render(
-        React.createElement(MarkdownPreview as any, {
+        React.createElement(MarkdownPreview, {
           content: '# hi',
           filePath: '/tmp/test.md',
           scrollCacheKey: 'test-dark'
@@ -281,7 +293,7 @@ describe('MarkdownPreview light background flag (isolated surface)', () => {
     await act(async () => {
       root = createRoot(containerEl)
       root.render(
-        React.createElement(MarkdownPreview as any, {
+        React.createElement(MarkdownPreview, {
           content: '# hi light',
           filePath: '/tmp/test.md',
           scrollCacheKey: 'test-light'
@@ -303,7 +315,7 @@ describe('MarkdownPreview light background flag (isolated surface)', () => {
     await act(async () => {
       root = createRoot(containerEl)
       root.render(
-        React.createElement(MarkdownPreview as any, {
+        React.createElement(MarkdownPreview, {
           content: '# hi',
           filePath: '/tmp/test.md',
           scrollCacheKey: 'test-light-app'
