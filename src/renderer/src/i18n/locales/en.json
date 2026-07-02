@@ -4118,7 +4118,8 @@
           "groupDeleteFailed": "Failed to delete group",
           "groupDeleteFailedDesc": "Something went wrong while deleting the group. No projects were removed.",
           "failedNestWorkspace": "Failed to nest workspace",
-          "sidebarRowMissing": "Target no longer exists"
+          "sidebarRowMissing": "Target no longer exists",
+          "failedUnnestWorkspace": "Failed to unnest workspace"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Cancel",
@@ -5162,7 +5163,9 @@
           "8f1afdfbd8": "Diff Word Wrap",
           "4aa4d9fb73": "Wrap long lines in diff editors instead of requiring horizontal scrolling.",
           "bf16ef0af2": "Off",
-          "3f6892f307": "On"
+          "3f6892f307": "On",
+          "7a2b9c4e1f": "Markdown Preview Light Background",
+          "3d8f1a6b2e": "Use a light reading background for markdown file previews (only affects the preview surface)."
         },
         "AdvancedNetworkSettingsSection": {
           "3e431564b5": "localhost, 127.0.0.1, *.internal",
@@ -6404,8 +6407,6 @@
           "a62b4cb39a": "Save Changes",
           "29af933cd5": "New SSH Target",
           "f2331ce599": "Edit SSH Target",
-          "7c13f58c91": "Until reset",
-          "55c56cf2c7": "Timeout after disconnect (seconds)",
           "4a342f44c1": "Advanced Connection",
           "e9609ddca6": "Proxy, jump host, and connection reuse",
           "8c922dffba": "Reuse SSH connection for faster setup",
@@ -7454,7 +7455,9 @@
             "161a86a9da": "Confirm before closing pinned tabs",
             "8e593f04fc": "Show a confirmation dialog before a pinned tab is closed.",
             "defaultProjectRuntime": "Default Project Runtime",
-            "defaultProjectRuntimeDescription": "Choose the runtime inherited by local Windows projects."
+            "defaultProjectRuntimeDescription": "Choose the runtime inherited by local Windows projects.",
+            "markdownPreviewLightBackground": "Markdown Preview Light Background",
+            "9f2e4c1a7b": "Use a light reading background for markdown file previews."
           }
         },
         "git": {
@@ -11015,14 +11018,16 @@
           "c98ce191da": "This diff has no modified-side file to open",
           "9b80bbe1de": "Open file tab",
           "f0fd4174b5": "Open file tab to use rich markdown editing",
-          "a10d9b8337": "Open file"
+          "a10d9b8337": "Open file",
+          "markdownPreviewLightBackground": "Markdown Preview Light Background"
         },
         "EditorPanelMarkdownActionsMenu": {
           "3e0ce48c24": "Export as PDF",
           "561251019a": "More actions",
           "8c8b7f5ff5": "Show front matter",
           "10c39d58c1": "Hide front matter",
-          "1eef809708": "Word Wrap"
+          "1eef809708": "Word Wrap",
+          "markdownPreviewLightBackground": "Light background"
         },
         "EditorPanelShell": {
           "e2c4dec350": "Loading editor..."

@@ -4095,7 +4095,8 @@
           "hostAuthNeeded": "Autenticación requerida",
           "hostDisconnected": "Desconectado",
           "failedNestWorkspace": "No se pudo anidar el espacio de trabajo",
-          "sidebarRowMissing": "El destino ya no existe"
+          "sidebarRowMissing": "El destino ya no existe",
+          "failedUnnestWorkspace": "Failed to unnest workspace"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Cancelar",
@@ -5162,7 +5163,9 @@
           "8f1afdfbd8": "Ajuste de palabras diferencial",
           "4aa4d9fb73": "Ajuste líneas largas en editores de diferencias en lugar de requerir desplazamiento horizontal.",
           "bf16ef0af2": "Apagado",
-          "3f6892f307": "En"
+          "3f6892f307": "En",
+          "7a2b9c4e1f": "Markdown Preview Light Background",
+          "3d8f1a6b2e": "Use a light reading background for markdown file previews (only affects the preview surface)."
         },
         "AdvancedNetworkSettingsSection": {
           "3e431564b5": "host local, 127.0.0.1, *.interno",
@@ -7415,7 +7418,9 @@
             "161a86a9da": "Confirmar antes de cerrar pestañas fijadas",
             "8e593f04fc": "Muestra un diálogo de confirmación antes de cerrar una pestaña fijada.",
             "defaultProjectRuntime": "Default Project Runtime",
-            "defaultProjectRuntimeDescription": "Choose the runtime inherited by local Windows projects."
+            "defaultProjectRuntimeDescription": "Choose the runtime inherited by local Windows projects.",
+            "markdownPreviewLightBackground": "Markdown Preview Light Background",
+            "9f2e4c1a7b": "Use a light reading background for markdown file previews."
           }
         },
         "git": {
@@ -11013,14 +11018,16 @@
           "c98ce191da": "Esta diferenciación no tiene ningún archivo del lado modificado para abrir",
           "9b80bbe1de": "Abrir pestaña de archivo",
           "f0fd4174b5": "Abra la pestaña de archivo para utilizar la edición de markdowns enriquecida",
-          "a10d9b8337": "Abrir archivo"
+          "a10d9b8337": "Abrir archivo",
+          "markdownPreviewLightBackground": "Markdown Preview Light Background"
         },
         "EditorPanelMarkdownActionsMenu": {
           "3e0ce48c24": "Exportar como PDF",
           "561251019a": "Más acciones",
           "8c8b7f5ff5": "Mostrar portada",
           "10c39d58c1": "Ocultar materia preliminar",
-          "1eef809708": "Ajuste de palabras"
+          "1eef809708": "Ajuste de palabras",
+          "markdownPreviewLightBackground": "Light background"
         },
         "EditorPanelShell": {
           "e2c4dec350": "Cargando editor..."
