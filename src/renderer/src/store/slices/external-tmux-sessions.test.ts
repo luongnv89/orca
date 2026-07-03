@@ -44,6 +44,19 @@ describe('createExternalTmuxSessionsSlice', () => {
     })
   })
 
+  it('clears sessions when discovery IPC fails', async () => {
+    listExternalTmuxSessions.mockResolvedValueOnce([session('tmux-1')])
+    const store = createTestStore()
+    await store.getState().refreshExternalTmuxSessions()
+    expect(store.getState().externalTmuxSessionOrder).toEqual(['tmux-1'])
+
+    listExternalTmuxSessions.mockRejectedValueOnce(new Error('tmux unavailable'))
+    await store.getState().refreshExternalTmuxSessions()
+
+    expect(store.getState().externalTmuxSessionOrder).toEqual([])
+    expect(store.getState().externalTmuxSessionsById).toEqual({})
+  })
+
   it('reconciles discovery snapshots authoritatively', async () => {
     listExternalTmuxSessions.mockResolvedValueOnce([session('tmux-1'), session('tmux-2')])
     const store = createTestStore()
