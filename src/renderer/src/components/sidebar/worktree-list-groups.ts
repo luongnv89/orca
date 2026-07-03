@@ -3,6 +3,7 @@ import { CircleX, FolderTree, List, Pin } from 'lucide-react'
 import type React from 'react'
 import type {
   DetectedWorktree,
+  ExternalTmuxSession,
   Project,
   ProjectHostSetup,
   FolderWorkspace,
@@ -50,6 +51,7 @@ export type GroupHeaderRow = {
   repo?: Repo
   projectGroup?: ProjectGroup | { id: null; name: 'Ungrouped'; tabOrder: number }
   projectGroupDepth?: number
+  projectId?: string | null
 }
 
 export type WorktreeRow = {
@@ -109,6 +111,22 @@ export type FolderWorkspaceRow = {
   groupDepth: number
 }
 
+export type ExternalTmuxSessionGroup = {
+  sectionKey: string
+  label: string
+  projectId: string | null
+  sessions: readonly ExternalTmuxSession[]
+}
+
+export type ExternalTmuxSessionSidebarRow = {
+  type: 'external-tmux-session'
+  key: string
+  sectionKey: string
+  session: ExternalTmuxSession
+  projectId: string | null
+  groupDepth: number
+}
+
 /** Minimal shape buildRows needs for an in-flight create. Deliberately not the
  *  full PendingWorktreeCreation: row identity depends only on which creates
  *  exist and their repo, so callers can subscribe on this stable shape and keep
@@ -122,6 +140,7 @@ export type Row =
   | NewExternalWorktreesInboxRow
   | PendingCreationRow
   | FolderWorkspaceRow
+  | ExternalTmuxSessionSidebarRow
 
 function buildPendingCreationRow(
   creation: PendingCreationRef,
@@ -147,6 +166,8 @@ type WorktreeGroupEntry = {
   items: Worktree[]
   repo?: Repo
   repoIds: Set<string>
+  projectId?: string | null
+  externalTmuxSessions: ExternalTmuxSessionSidebarRow[]
 }
 
 type ProjectGroupingIndex = {
@@ -742,8 +763,17 @@ function sortProjectEntries(
   projectOrderBy: ProjectOrderBy,
   repoOrder: Map<string, number> | undefined
 ): OrderedGroupEntry[] {
+  const compareUnclassifiedTmux = (a: OrderedGroupEntry, b: OrderedGroupEntry): number => {
+    const aUnclassified = a[0] === 'external-tmux:unclassified'
+    const bUnclassified = b[0] === 'external-tmux:unclassified'
+    return aUnclassified === bUnclassified ? 0 : aUnclassified ? 1 : -1
+  }
   if (projectOrderBy === 'recent') {
     return [...entries].sort((a, b) => {
+      const byTmuxBucket = compareUnclassifiedTmux(a, b)
+      if (byTmuxBucket !== 0) {
+        return byTmuxBucket
+      }
       const byRecent = compareRecentRank(recentRankForEntry(a), recentRankForEntry(b))
       if (byRecent !== 0) {
         return byRecent
@@ -760,6 +790,10 @@ function sortProjectEntries(
     return entries
   }
   return [...entries].sort((a, b) => {
+    const byTmuxBucket = compareUnclassifiedTmux(a, b)
+    if (byTmuxBucket !== 0) {
+      return byTmuxBucket
+    }
     const ra = manualRankForEntry(a, repoOrder)
     const rb = manualRankForEntry(b, repoOrder)
     if (ra !== rb) {
@@ -798,7 +832,8 @@ export function buildRows(
   pendingCreations: readonly PendingCreationRef[] = [],
   projectGrouping?: ProjectGroupingModel,
   folderWorkspaces: readonly FolderWorkspace[] = [],
-  hostLabelById?: ReadonlyMap<string, string>
+  hostLabelById?: ReadonlyMap<string, string>,
+  externalTmuxSessionGroups: readonly ExternalTmuxSessionGroup[] = []
 ): Row[] {
   const result: Row[] = []
   const projectIndex = buildProjectGroupingIndex(projectGrouping)
@@ -862,11 +897,13 @@ export function buildRows(
     let key: string
     let label: string
     let repo: Repo | undefined
+    let projectId: string | null | undefined
     if (groupBy === 'repo') {
       const grouping = getProjectGroupingForRepo(w.repoId, repoMap, projectIndex)
       key = grouping.key
       label = grouping.label
       repo = grouping.repo
+      projectId = grouping.projectId
     } else if (groupBy === 'workspace-status') {
       const workspaceStatus = getWorkspaceStatus(w, workspaceStatuses)
       key = getWorkspaceStatusGroupKey(workspaceStatus)
@@ -878,7 +915,14 @@ export function buildRows(
       label = PR_GROUP_META[prGroup].label
     }
     if (!grouped.has(key)) {
-      grouped.set(key, { label, items: [], repo, repoIds: new Set() })
+      grouped.set(key, {
+        label,
+        items: [],
+        repo,
+        repoIds: new Set(),
+        projectId,
+        externalTmuxSessions: []
+      })
     }
     const group = grouped.get(key)!
     group.items.push(w)
@@ -898,7 +942,9 @@ export function buildRows(
           label: grouping.label,
           items: [],
           repo: grouping.repo,
-          repoIds: new Set([repoId])
+          repoIds: new Set([repoId]),
+          projectId: grouping.projectId,
+          externalTmuxSessions: []
         })
       } else {
         addRepoIdToGroup(grouped.get(key)!, repoId)
@@ -914,7 +960,9 @@ export function buildRows(
           label: grouping.label,
           items: [],
           repo: grouping.repo ?? candidate.repo,
-          repoIds: new Set([repoId])
+          repoIds: new Set([repoId]),
+          projectId: grouping.projectId,
+          externalTmuxSessions: []
         })
       } else if (grouped.has(key)) {
         addRepoIdToGroup(grouped.get(key)!, repoId)
@@ -930,7 +978,9 @@ export function buildRows(
           label: grouping.label,
           items: [],
           repo: grouping.repo ?? candidate.repo,
-          repoIds: new Set([repoId])
+          repoIds: new Set([repoId]),
+          projectId: grouping.projectId,
+          externalTmuxSessions: []
         })
       } else if (grouped.has(key)) {
         addRepoIdToGroup(grouped.get(key)!, repoId)
@@ -949,11 +999,34 @@ export function buildRows(
           label: grouping.label,
           items: [],
           repo: grouping.repo,
-          repoIds: new Set([repoId])
+          repoIds: new Set([repoId]),
+          projectId: grouping.projectId,
+          externalTmuxSessions: []
         })
       } else {
         addRepoIdToGroup(grouped.get(key)!, repoId)
       }
+    }
+    for (const externalGroup of externalTmuxSessionGroups) {
+      const group = grouped.get(externalGroup.sectionKey) ?? {
+        label: externalGroup.label,
+        items: [],
+        repo: undefined,
+        repoIds: new Set<string>(),
+        projectId: externalGroup.projectId,
+        externalTmuxSessions: []
+      }
+      group.externalTmuxSessions.push(
+        ...externalGroup.sessions.map((session) => ({
+          type: 'external-tmux-session' as const,
+          key: `external-tmux:${session.id}`,
+          sectionKey: externalGroup.sectionKey,
+          session,
+          projectId: externalGroup.projectId,
+          groupDepth: 0
+        }))
+      )
+      grouped.set(externalGroup.sectionKey, group)
     }
   }
 
@@ -1007,11 +1080,12 @@ export function buildRows(
               type: 'header' as const,
               key,
               label: group.label,
-              count: group.items.length,
+              count: group.items.length + group.externalTmuxSessions.length,
               tone: PROJECT_GROUP_META.tone,
               icon: PROJECT_GROUP_META.icon,
               repo,
-              projectGroupDepth
+              projectGroupDepth,
+              projectId: group.projectId
             }
           : groupBy === 'workspace-status'
             ? (() => {
@@ -1073,6 +1147,9 @@ export function buildRows(
             for (const creation of pendingByRepo.get(repoId) ?? []) {
               result.push(buildPendingCreationRow(creation, repoMap))
             }
+          }
+          for (const row of group.externalTmuxSessions) {
+            result.push({ ...row, groupDepth: projectGroupDepth })
           }
         }
         const items = groupBy === 'repo' ? orderMainWorktreeFirst(group.items) : group.items

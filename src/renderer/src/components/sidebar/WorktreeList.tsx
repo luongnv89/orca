@@ -222,6 +222,7 @@ import { RepoIconGlyph } from '@/components/repo/repo-icon'
 import { RepoForkIndicator } from '@/components/repo/repo-fork-indicator'
 import ImportedWorktreesVisibilityLine from './ImportedWorktreesVisibilityLine'
 import NewExternalWorktreesInboxLine from './NewExternalWorktreesInboxLine'
+import ExternalTmuxSessionRow from './ExternalTmuxSessionRow'
 import SuppressExternalWorktreeInboxDialog from './SuppressExternalWorktreeInboxDialog'
 import {
   keepImportedWorktreesHiddenCard,
@@ -258,6 +259,10 @@ import {
 } from './worktree-list-indentation'
 import { addHostSectionRows, type HostHeaderRow, type HostSectionRow } from './host-section-rows'
 import { orderHostSectionOptions } from './host-section-order'
+import {
+  EXTERNAL_TMUX_SESSION_DRAG_TYPE,
+  buildExternalTmuxSessionSections
+} from './external-tmux-session-placement'
 import { useHostHeaderDrag } from './host-header-drag'
 import { buildSidebarHostOptions } from './sidebar-host-options'
 import { HostSectionHeaderMenu } from './HostSectionHeaderMenu'
@@ -495,6 +500,9 @@ function getRenderRowSidebarKey(row: RenderRow): string | null {
   if (row.type === 'new-external-worktrees-inbox') {
     return row.key
   }
+  if (row.type === 'external-tmux-session') {
+    return row.key
+  }
   return null
 }
 
@@ -619,6 +627,7 @@ type VirtualizedWorktreeViewportProps = {
   handleKeepNewExternalWorktreeInboxHidden: (projectId: string) => void
   handleOpenSuppressExternalWorktreeInbox: (projectId: string) => void
   newExternalWorktreeInboxActionState: ReadonlyMap<string, NewExternalWorktreesInboxActionState>
+  setExternalTmuxSessionProjectPlacement: (sessionId: string, projectId: string | null) => void
   handleRemoveProject: (repo: Repo) => void
   handleCreateGroupFromRepo: (repo: Repo) => void
   handleMoveProjectToGroup: (repo: Repo, groupId: string) => void
@@ -1162,6 +1171,9 @@ export function getRenderRowKey(row: RenderRow): string {
   if (row.type === 'pending-creation') {
     return `pending:${row.creationId}`
   }
+  if (row.type === 'external-tmux-session') {
+    return `external-tmux:${row.session.id}`
+  }
   if (row.type === 'folder-workspace') {
     return `folder-workspace:${row.folderWorkspace.id}`
   }
@@ -1183,6 +1195,7 @@ export function getWorktreeDragGroups(rows: HostSectionRow[]): WorktreeDragGroup
       row.type === 'imported-worktrees-card' ||
       row.type === 'new-external-worktrees-inbox' ||
       row.type === 'pending-creation' ||
+      row.type === 'external-tmux-session' ||
       row.type === 'folder-workspace'
     ) {
       continue
@@ -1258,6 +1271,7 @@ const VirtualizedWorktreeViewport = React.memo(function VirtualizedWorktreeViewp
   handleKeepNewExternalWorktreeInboxHidden,
   handleOpenSuppressExternalWorktreeInbox,
   newExternalWorktreeInboxActionState,
+  setExternalTmuxSessionProjectPlacement,
   handleRemoveProject,
   handleCreateGroupFromRepo,
   handleMoveProjectToGroup,
@@ -4060,6 +4074,8 @@ const VirtualizedWorktreeViewport = React.memo(function VirtualizedWorktreeViewp
               const isRepoHeader = groupBy === 'repo' && row.repo !== undefined
               const isProjectGroupHeader = groupBy === 'repo' && row.projectGroup !== undefined
               const projectIdForHeader = isRepoHeader ? row.repo!.id : undefined
+              const externalTmuxDropProjectId =
+                groupBy === 'repo' ? (row.projectId ?? projectIdForHeader ?? null) : null
               const projectGroupIdForHeader =
                 isProjectGroupHeader && !row.repo && typeof row.projectGroup?.id === 'string'
                   ? row.projectGroup.id
@@ -4207,13 +4223,23 @@ const VirtualizedWorktreeViewport = React.memo(function VirtualizedWorktreeViewp
                       row.repo && 'overflow-hidden'
                     )}
                     style={{ paddingLeft: headerPaddingLeft }}
-                    onDragOver={
-                      isPinnedHeader
-                        ? handleWorkspacePinDragOver
-                        : headerWorkspaceStatus
-                          ? (event) => handleWorkspaceStatusDragOver(event, headerWorkspaceStatus)
-                          : undefined
-                    }
+                    onDragOver={(event) => {
+                      if (
+                        externalTmuxDropProjectId &&
+                        event.dataTransfer.types.includes(EXTERNAL_TMUX_SESSION_DRAG_TYPE)
+                      ) {
+                        event.preventDefault()
+                        event.dataTransfer.dropEffect = 'move'
+                        return
+                      }
+                      if (isPinnedHeader) {
+                        handleWorkspacePinDragOver(event)
+                        return
+                      }
+                      if (headerWorkspaceStatus) {
+                        handleWorkspaceStatusDragOver(event, headerWorkspaceStatus)
+                      }
+                    }}
                     onDragLeave={
                       isPinnedHeader
                         ? handleWorkspacePinDragLeave
@@ -4221,11 +4247,22 @@ const VirtualizedWorktreeViewport = React.memo(function VirtualizedWorktreeViewp
                           ? handleWorkspaceStatusDragLeave
                           : undefined
                     }
-                    onDrop={
-                      headerWorkspaceStatus
-                        ? (event) => handleWorkspaceStatusDrop(event, headerWorkspaceStatus)
-                        : undefined
-                    }
+                    onDrop={(event) => {
+                      const externalSessionId = event.dataTransfer.getData(
+                        EXTERNAL_TMUX_SESSION_DRAG_TYPE
+                      )
+                      if (externalTmuxDropProjectId && externalSessionId) {
+                        event.preventDefault()
+                        setExternalTmuxSessionProjectPlacement(
+                          externalSessionId,
+                          externalTmuxDropProjectId
+                        )
+                        return
+                      }
+                      if (headerWorkspaceStatus) {
+                        handleWorkspaceStatusDrop(event, headerWorkspaceStatus)
+                      }
+                    }}
                     onClick={(event) => {
                       if (shouldIgnoreRepoHeaderToggle(event)) {
                         return
@@ -4975,6 +5012,24 @@ const VirtualizedWorktreeViewport = React.memo(function VirtualizedWorktreeViewp
               )
             }
 
+            if (row.type === 'external-tmux-session') {
+              return (
+                <div
+                  key={vItem.key}
+                  role="presentation"
+                  data-worktree-virtual-row
+                  data-worktree-virtual-row-key={String(vItem.key)}
+                  data-worktree-virtual-row-start={vItem.start}
+                  data-index={vItem.index}
+                  ref={measureVirtualRowElement}
+                  className="absolute left-0 right-0 top-0"
+                  style={{ transform: getVirtualRowTransform(vItem.start) }}
+                >
+                  <ExternalTmuxSessionRow session={row.session} depth={row.groupDepth} />
+                </div>
+              )
+            }
+
             if (row.type === 'folder-workspace') {
               const folderWorkspaceRow = row as FolderWorkspaceItemRow
               const folderWorktree = folderWorkspaceToWorktree(folderWorkspaceRow.folderWorkspace)
@@ -5249,8 +5304,25 @@ const WorktreeList = React.memo(function WorktreeList({
   const sshConnectionStates = useAppStore((s) => s.sshConnectionStates)
   const runtimeEnvironments = useAppStore((s) => s.runtimeEnvironments)
   const runtimeStatusByEnvironmentId = useAppStore((s) => s.runtimeStatusByEnvironmentId)
+  const externalTmuxSessionsById = useAppStore((s) => s.externalTmuxSessionsById)
+  const externalTmuxSessionOrder = useAppStore((s) => s.externalTmuxSessionOrder)
+  const externalTmuxSessionPlacements = useAppStore((s) => s.externalTmuxSessionPlacements)
+  const refreshExternalTmuxSessions = useAppStore((s) => s.refreshExternalTmuxSessions)
+  const setExternalTmuxSessionProjectPlacement = useAppStore(
+    (s) => s.setExternalTmuxSessionProjectPlacement
+  )
 
   const sortEpoch = useAppStore((s) => s.sortEpoch)
+
+  useEffect(() => {
+    void refreshExternalTmuxSessions()
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        void refreshExternalTmuxSessions()
+      }
+    }, 15_000)
+    return () => window.clearInterval(intervalId)
+  }, [refreshExternalTmuxSessions])
 
   // Count of non-archived worktrees — used to detect structural changes
   // (add/remove) vs. pure reorders (score shifts) so the debounce below
@@ -5560,6 +5632,32 @@ const WorktreeList = React.memo(function WorktreeList({
     }),
     [projectHostSetupProjection]
   )
+  const externalTmuxSessions = useMemo(
+    () =>
+      externalTmuxSessionOrder
+        .map((id) => externalTmuxSessionsById[id])
+        .filter((session): session is NonNullable<typeof session> => Boolean(session)),
+    [externalTmuxSessionOrder, externalTmuxSessionsById]
+  )
+  const externalTmuxSessionGroups = useMemo(
+    () =>
+      buildExternalTmuxSessionSections({
+        sessions: externalTmuxSessions,
+        placements: externalTmuxSessionPlacements,
+        projects: projectHostSetupProjection.projects,
+        projectHostSetups: projectHostSetupProjection.setups,
+        repos,
+        worktrees: allWorktrees
+      }),
+    [
+      allWorktrees,
+      externalTmuxSessionPlacements,
+      externalTmuxSessions,
+      projectHostSetupProjection.projects,
+      projectHostSetupProjection.setups,
+      repos
+    ]
+  )
   const projectGroups = useAppStore((s) => s.projectGroups ?? EMPTY_PROJECT_GROUPS)
   const folderWorkspaces = useAppStore((s) => s.folderWorkspaces)
   const effectiveCollapsedGroups = useMemo(() => {
@@ -5775,7 +5873,8 @@ const WorktreeList = React.memo(function WorktreeList({
         pendingCreations,
         projectGrouping,
         visibleFolderWorkspacesForRows,
-        hostLabelById
+        hostLabelById,
+        externalTmuxSessionGroups
       ),
     [
       groupBy,
@@ -5796,7 +5895,8 @@ const WorktreeList = React.memo(function WorktreeList({
       importedWorktreesByRepo,
       newExternalWorktreesInboxByRepo,
       pendingCreations,
-      hostLabelById
+      hostLabelById,
+      externalTmuxSessionGroups
     ]
   )
   const orderedHostOptions = useMemo(
@@ -5863,6 +5963,8 @@ const WorktreeList = React.memo(function WorktreeList({
       } else if (row.type === 'imported-worktrees-card') {
         keys.add(row.key)
       } else if (row.type === 'new-external-worktrees-inbox') {
+        keys.add(row.key)
+      } else if (row.type === 'external-tmux-session') {
         keys.add(row.key)
       }
     }
@@ -6810,6 +6912,7 @@ const WorktreeList = React.memo(function WorktreeList({
         handleKeepNewExternalWorktreeInboxHidden={handleKeepNewExternalWorktreeInboxHidden}
         handleOpenSuppressExternalWorktreeInbox={handleOpenSuppressExternalWorktreeInbox}
         newExternalWorktreeInboxActionState={newExternalWorktreeInboxActionState}
+        setExternalTmuxSessionProjectPlacement={setExternalTmuxSessionProjectPlacement}
         handleRemoveProject={handleRemoveProject}
         handleCreateGroupFromRepo={handleCreateGroupFromRepo}
         handleMoveProjectToGroup={handleMoveProjectToGroup}

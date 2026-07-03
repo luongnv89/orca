@@ -4,6 +4,7 @@ import { DegradedDaemonPtyProvider } from '../daemon/degraded-daemon-pty-provide
 import type { DaemonPtyAdapter } from '../daemon/daemon-pty-adapter'
 import { getDaemonProvider, restartDaemon } from '../daemon/daemon-init'
 import type { DaemonSessionInfo } from '../daemon/types'
+import { discoverExternalTmuxSessions } from '../external-tmux-session-discovery'
 
 // Why: the daemon's session.kill() sends SIGTERM first and escalates to
 // SIGKILL after a 5s grace window (KILL_TIMEOUT_MS in session.ts). We have
@@ -57,6 +58,7 @@ export function registerDaemonManagementHandlers(): void {
   ipcMain.removeHandler('pty:management:killAll')
   ipcMain.removeHandler('pty:management:killOne')
   ipcMain.removeHandler('pty:management:restart')
+  ipcMain.removeHandler('pty:management:listExternalTmuxSessions')
 
   ipcMain.handle(
     'pty:management:listSessions',
@@ -176,4 +178,8 @@ export function registerDaemonManagementHandlers(): void {
       return { success: false }
     }
   })
+
+  ipcMain.handle('pty:management:listExternalTmuxSessions', async () =>
+    discoverExternalTmuxSessions()
+  )
 }

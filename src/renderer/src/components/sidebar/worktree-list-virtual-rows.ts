@@ -9,6 +9,7 @@ const SECONDARY_GROUP_HEADER_TOP_MARGIN = 4
 const IMPORTED_WORKTREES_LINE_ROW_HEIGHT = 36
 const PENDING_CREATION_ROW_HEIGHT = 56
 const FOLDER_WORKSPACE_ROW_HEIGHT = 64
+const EXTERNAL_TMUX_SESSION_ROW_HEIGHT = 48
 
 type WorktreeItemRow = Extract<HostSectionRow, { type: 'item' }>
 export type RenderRow =
@@ -68,6 +69,9 @@ export function estimateRenderRowSize(
   }
   if (row?.type === 'folder-workspace') {
     return FOLDER_WORKSPACE_ROW_HEIGHT
+  }
+  if (row?.type === 'external-tmux-session') {
+    return EXTERNAL_TMUX_SESSION_ROW_HEIGHT
   }
   return 116
 }

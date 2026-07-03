@@ -77,6 +77,8 @@ function getRowHostId(row: Row, defaultHostId: ExecutionHostId): ExecutionHostId
       return getRepoHostId(row.repo, defaultHostId)
     case 'folder-workspace':
       return getFolderWorkspaceHostId(row.folderWorkspace, row.projectGroup, defaultHostId)
+    case 'external-tmux-session':
+      return row.session.hostId
     case 'header':
       return row.repo ? getRepoHostId(row.repo, defaultHostId) : null
   }
@@ -119,6 +121,10 @@ function countWorktreeRows(rows: readonly Row[]): number {
         count += 1
         seenWorktreeIds.add(row.worktree.id)
       }
+      pendingHeaderHadItems = pendingHeaderCount !== null
+    }
+    if (row.type === 'external-tmux-session') {
+      count += 1
       pendingHeaderHadItems = pendingHeaderCount !== null
     }
   }

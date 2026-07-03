@@ -969,6 +969,7 @@ const api = {
 
     management: {
       listSessions: () => ipcRenderer.invoke('pty:management:listSessions'),
+      listExternalTmuxSessions: () => ipcRenderer.invoke('pty:management:listExternalTmuxSessions'),
       killAll: () => ipcRenderer.invoke('pty:management:killAll'),
       killOne: (args: { sessionId: string }) => ipcRenderer.invoke('pty:management:killOne', args),
       restart: () => ipcRenderer.invoke('pty:management:restart')
