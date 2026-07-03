@@ -74,12 +74,17 @@ export default function ExternalTmuxSessionRow({
         event.dataTransfer.setData(EXTERNAL_TMUX_SESSION_DRAG_TYPE, session.id)
         event.dataTransfer.effectAllowed = 'move'
       }}
+      // Why: without this, a cancelled/completed drag leaves didDragRef stuck
+      // true and the next click is silently swallowed by handleOpenSession.
+      onDragEnd={() => {
+        didDragRef.current = false
+      }}
       className={cn(
-        'group mx-2 rounded-md border border-transparent px-2 py-1.5 text-sidebar-foreground',
-        'cursor-pointer select-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+        'group mx-2 rounded-md border border-transparent px-2 py-1.5 text-worktree-sidebar-foreground',
+        'cursor-pointer select-none hover:bg-worktree-sidebar-accent hover:text-worktree-sidebar-accent-foreground',
         'active:cursor-grabbing',
-        'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sidebar-ring',
-        'focus-within:bg-sidebar-accent focus-within:text-sidebar-accent-foreground'
+        'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-worktree-sidebar-ring',
+        'focus-within:bg-worktree-sidebar-accent focus-within:text-worktree-sidebar-accent-foreground'
       )}
       style={{ paddingLeft: `${8 + depth * 12}px` }}
       title={session.sessionName}
@@ -90,7 +95,7 @@ export default function ExternalTmuxSessionRow({
           <div className="truncate text-[13px] font-medium leading-5">{session.sessionName}</div>
           <div className="truncate text-xs text-muted-foreground">{getSessionDetail(session)}</div>
         </div>
-        <span className="shrink-0 rounded-full border border-sidebar-border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.05em] text-muted-foreground">
+        <span className="shrink-0 rounded-full border border-worktree-sidebar-border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.05em] text-muted-foreground">
           tmux
         </span>
         <DropdownMenu>
@@ -103,6 +108,9 @@ export default function ExternalTmuxSessionRow({
               aria-label={`Move ${session.sessionName} to a project`}
               onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => event.stopPropagation()}
+              // Why: without this, Enter/Space on the trigger bubbles to the row's
+              // onKeyDown and both opens the menu and attaches to the session.
+              onKeyDown={(event) => event.stopPropagation()}
             >
               <Ellipsis className="size-3.5" aria-hidden="true" />
             </Button>
