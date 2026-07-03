@@ -541,6 +541,11 @@
       },
       "ephemeralVmWorkspaceTarget": {
         "projectRootRegistrationFailed": "Failed to register the recipe-created project root on the runtime."
+      },
+      "externalTmuxSessionAttach": {
+        "remoteUnsupported": "暂不支持在远程主机上附加 tmux 会话。",
+        "noWorkspace": "请先打开对应的项目工作区，再附加此 tmux 会话。",
+        "attachFailed": "无法打开终端以附加到 {{sessionName}}。"
       }
     },
     "hooks": {
