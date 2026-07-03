@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { Ellipsis, Terminal } from 'lucide-react'
 import type { ExternalTmuxSession } from '../../../../shared/types'
 import { Button } from '@/components/ui/button'
@@ -9,6 +10,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { openExternalTmuxSessionInTerminal } from '@/lib/external-tmux-session-attach'
 import { EXTERNAL_TMUX_SESSION_DRAG_TYPE } from './external-tmux-session-placement'
 
 export type ExternalTmuxSessionProjectOption = {
@@ -42,6 +44,16 @@ export default function ExternalTmuxSessionRow({
   projectOptions,
   onMoveToProject
 }: ExternalTmuxSessionRowProps) {
+  const didDragRef = useRef(false)
+
+  const handleOpenSession = (): void => {
+    if (didDragRef.current) {
+      didDragRef.current = false
+      return
+    }
+    void openExternalTmuxSessionInTerminal(session)
+  }
+
   return (
     <div
       id={optionId}
@@ -50,13 +62,22 @@ export default function ExternalTmuxSessionRow({
       tabIndex={0}
       aria-selected={false}
       aria-label={getSessionLabel(session)}
+      onClick={handleOpenSession}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          handleOpenSession()
+        }
+      }}
       onDragStart={(event) => {
+        didDragRef.current = true
         event.dataTransfer.setData(EXTERNAL_TMUX_SESSION_DRAG_TYPE, session.id)
         event.dataTransfer.effectAllowed = 'move'
       }}
       className={cn(
         'group mx-2 rounded-md border border-transparent px-2 py-1.5 text-sidebar-foreground',
-        'cursor-grab select-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+        'cursor-pointer select-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+        'active:cursor-grabbing',
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sidebar-ring',
         'focus-within:bg-sidebar-accent focus-within:text-sidebar-accent-foreground'
       )}
