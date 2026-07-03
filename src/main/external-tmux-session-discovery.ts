@@ -1,5 +1,6 @@
 import { execFile as execFileCallback } from 'node:child_process'
 import { LOCAL_EXECUTION_HOST_ID } from '../shared/execution-host'
+import type { ExecutionHostId } from '../shared/execution-host'
 import type { ExternalTmuxSession, ExternalTmuxSessionPane } from '../shared/types'
 
 const FIELD_SEPARATOR = '\u001f'
@@ -7,6 +8,7 @@ const DISCOVERY_TIMEOUT_MS = 1500
 const LIST_PANES_FORMAT = [
   '#{session_id}',
   '#{session_name}',
+  '#{session_created}',
   '#{window_id}',
   '#{window_name}',
   '#{pane_id}',
@@ -33,7 +35,8 @@ type MutableSession = ExternalTmuxSession & {
 
 export function parseTmuxListPanesOutput(
   output: string,
-  discoveredAt = Date.now()
+  discoveredAt = Date.now(),
+  hostId: ExecutionHostId = LOCAL_EXECUTION_HOST_ID
 ): ExternalTmuxSession[] {
   const sessions = new Map<string, MutableSession>()
   for (const rawLine of output.split(/\r?\n/)) {
@@ -41,22 +44,32 @@ export function parseTmuxListPanesOutput(
       continue
     }
     const fields = rawLine.split(FIELD_SEPARATOR)
-    if (fields.length < 8) {
+    if (fields.length < 9) {
       continue
     }
-    const [sessionId, sessionName, windowId, windowName, paneId, currentPath, command, active] =
-      fields
-    if (!sessionId || !sessionName || !paneId) {
+    const sessionId = fields[0]!
+    const sessionName = fields[1]!
+    const sessionCreated = fields[2]!
+    const windowId = fields[3]!
+    const windowName = fields[4]!
+    const paneId = fields[5]!
+    const currentPath = fields[6]!
+    const command = fields[7]!
+    const active = fields[8]!
+    if (!sessionId || !sessionName || !sessionCreated || !paneId) {
       continue
     }
-    const id = `external-tmux:${LOCAL_EXECUTION_HOST_ID}:${sessionId}`
+    // Why: tmux can reuse `$1`-style session ids after a server restart, so
+    // persisted placement keys include the creation timestamp as durable salt.
+    const id = `external-tmux:${hostId}:${sessionId}:${sessionCreated}`
     let session = sessions.get(id)
     if (!session) {
       session = {
         id,
         sessionId,
         sessionName,
-        hostId: LOCAL_EXECUTION_HOST_ID,
+        sessionCreated,
+        hostId,
         discoveredAt,
         paneCurrentPaths: [],
         panes: [],
@@ -105,7 +118,9 @@ export async function discoverExternalTmuxSessions(
         }
       )
     })
-    return parseTmuxListPanesOutput(stdout, discoveredAt)
+    // Why: this IPC enumerates only the local tmux server. Remote/runtime hosts
+    // stay host-isolated until a dedicated remote command path is available.
+    return parseTmuxListPanesOutput(stdout, discoveredAt, LOCAL_EXECUTION_HOST_ID)
   } catch {
     // Why: tmux is optional and often absent on Windows or SSH-light installs;
     // discovery must never break the project sidebar.

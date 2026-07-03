@@ -39,6 +39,16 @@ function sessionMatchesHost(
   return session.hostId === (hostId ?? LOCAL_EXECUTION_HOST_ID)
 }
 
+function projectHasHostSetup(
+  projectId: string,
+  session: ExternalTmuxSession,
+  projectHostSetups: readonly ProjectHostSetup[]
+): boolean {
+  return projectHostSetups.some(
+    (setup) => setup.projectId === projectId && sessionMatchesHost(session, setup.hostId)
+  )
+}
+
 function findProjectByPath(
   session: ExternalTmuxSession,
   projectHostSetups: readonly ProjectHostSetup[],
@@ -74,7 +84,11 @@ export function resolveExternalTmuxSessionProjectId(args: {
   worktrees: readonly Worktree[]
 }): string | null {
   const manualProjectId = args.placements[args.session.id]?.projectId
-  if (manualProjectId && args.projects.some((project) => project.id === manualProjectId)) {
+  if (
+    manualProjectId &&
+    args.projects.some((project) => project.id === manualProjectId) &&
+    projectHasHostSetup(manualProjectId, args.session, args.projectHostSetups)
+  ) {
     return manualProjectId
   }
   const matchedProjectId = findProjectByPath(args.session, args.projectHostSetups, args.worktrees)

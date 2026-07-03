@@ -136,6 +136,7 @@ export type ExternalTmuxSession = {
   id: string
   sessionId: string
   sessionName: string
+  sessionCreated: string
   hostId: ExecutionHostId
   discoveredAt: number
   paneCurrentPaths: string[]

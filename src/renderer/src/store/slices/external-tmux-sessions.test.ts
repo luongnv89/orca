@@ -15,6 +15,7 @@ function session(id: string, sessionName = id): ExternalTmuxSession {
     id,
     sessionId: id,
     sessionName,
+    sessionCreated: '1',
     hostId: 'local',
     discoveredAt: 1,
     paneCurrentPaths: ['/repo'],

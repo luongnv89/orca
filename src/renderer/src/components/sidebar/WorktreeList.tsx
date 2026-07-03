@@ -201,6 +201,7 @@ import { callRuntimeRpc } from '@/runtime/runtime-rpc-client'
 import { splitWorktreeSortOrderByHost } from '@/lib/worktree-sort-order-host-split'
 import {
   ALL_EXECUTION_HOSTS_SCOPE,
+  LOCAL_EXECUTION_HOST_ID,
   getRepoExecutionHostId,
   getSettingsFocusedExecutionHostId,
   type ExecutionHostId,
@@ -222,7 +223,9 @@ import { RepoIconGlyph } from '@/components/repo/repo-icon'
 import { RepoForkIndicator } from '@/components/repo/repo-fork-indicator'
 import ImportedWorktreesVisibilityLine from './ImportedWorktreesVisibilityLine'
 import NewExternalWorktreesInboxLine from './NewExternalWorktreesInboxLine'
-import ExternalTmuxSessionRow from './ExternalTmuxSessionRow'
+import ExternalTmuxSessionRow, {
+  type ExternalTmuxSessionProjectOption
+} from './ExternalTmuxSessionRow'
 import SuppressExternalWorktreeInboxDialog from './SuppressExternalWorktreeInboxDialog'
 import {
   keepImportedWorktreesHiddenCard,
@@ -627,6 +630,7 @@ type VirtualizedWorktreeViewportProps = {
   handleKeepNewExternalWorktreeInboxHidden: (projectId: string) => void
   handleOpenSuppressExternalWorktreeInbox: (projectId: string) => void
   newExternalWorktreeInboxActionState: ReadonlyMap<string, NewExternalWorktreesInboxActionState>
+  externalTmuxProjectOptions: readonly HostScopedExternalTmuxProjectOption[]
   setExternalTmuxSessionProjectPlacement: (sessionId: string, projectId: string | null) => void
   handleRemoveProject: (repo: Repo) => void
   handleCreateGroupFromRepo: (repo: Repo) => void
@@ -703,6 +707,10 @@ type VirtualizedWorktreeViewportProps = {
   // both paths so the virtualizer never falls back to scrollTop 0.
   scrollOffsetRef: React.MutableRefObject<number>
   scrollAnchorRef: React.MutableRefObject<VirtualizedScrollAnchor>
+}
+
+type HostScopedExternalTmuxProjectOption = ExternalTmuxSessionProjectOption & {
+  hostIds: readonly ExecutionHostId[]
 }
 
 type WorktreeItemRow = Extract<HostSectionRow, { type: 'item' }>
@@ -1271,6 +1279,7 @@ const VirtualizedWorktreeViewport = React.memo(function VirtualizedWorktreeViewp
   handleKeepNewExternalWorktreeInboxHidden,
   handleOpenSuppressExternalWorktreeInbox,
   newExternalWorktreeInboxActionState,
+  externalTmuxProjectOptions,
   setExternalTmuxSessionProjectPlacement,
   handleRemoveProject,
   handleCreateGroupFromRepo,
@@ -5025,7 +5034,16 @@ const VirtualizedWorktreeViewport = React.memo(function VirtualizedWorktreeViewp
                   className="absolute left-0 right-0 top-0"
                   style={{ transform: getVirtualRowTransform(vItem.start) }}
                 >
-                  <ExternalTmuxSessionRow session={row.session} depth={row.groupDepth} />
+                  <ExternalTmuxSessionRow
+                    session={row.session}
+                    optionId={getWorktreeOptionId(row.key)}
+                    depth={row.groupDepth}
+                    currentProjectId={row.projectId}
+                    projectOptions={externalTmuxProjectOptions.filter((project) =>
+                      project.hostIds.includes(row.session.hostId)
+                    )}
+                    onMoveToProject={setExternalTmuxSessionProjectPlacement}
+                  />
                 </div>
               )
             }
@@ -5304,12 +5322,14 @@ const WorktreeList = React.memo(function WorktreeList({
   const sshConnectionStates = useAppStore((s) => s.sshConnectionStates)
   const runtimeEnvironments = useAppStore((s) => s.runtimeEnvironments)
   const runtimeStatusByEnvironmentId = useAppStore((s) => s.runtimeStatusByEnvironmentId)
-  const externalTmuxSessionsById = useAppStore((s) => s.externalTmuxSessionsById)
-  const externalTmuxSessionOrder = useAppStore((s) => s.externalTmuxSessionOrder)
-  const externalTmuxSessionPlacements = useAppStore((s) => s.externalTmuxSessionPlacements)
-  const refreshExternalTmuxSessions = useAppStore((s) => s.refreshExternalTmuxSessions)
+  const externalTmuxSessionsById = useAppStore((s) => s.externalTmuxSessionsById ?? {})
+  const externalTmuxSessionOrder = useAppStore((s) => s.externalTmuxSessionOrder ?? [])
+  const externalTmuxSessionPlacements = useAppStore((s) => s.externalTmuxSessionPlacements ?? {})
+  const refreshExternalTmuxSessions = useAppStore(
+    (s) => s.refreshExternalTmuxSessions ?? (() => Promise.resolve())
+  )
   const setExternalTmuxSessionProjectPlacement = useAppStore(
-    (s) => s.setExternalTmuxSessionProjectPlacement
+    (s) => s.setExternalTmuxSessionProjectPlacement ?? (() => undefined)
   )
 
   const sortEpoch = useAppStore((s) => s.sortEpoch)
@@ -5639,6 +5659,21 @@ const WorktreeList = React.memo(function WorktreeList({
         .filter((session): session is NonNullable<typeof session> => Boolean(session)),
     [externalTmuxSessionOrder, externalTmuxSessionsById]
   )
+  const externalTmuxProjectOptions = useMemo<HostScopedExternalTmuxProjectOption[]>(() => {
+    const hostIdsByProjectId = new Map<string, Set<ExecutionHostId>>()
+    for (const setup of projectHostSetupProjection.setups) {
+      const hostIds = hostIdsByProjectId.get(setup.projectId) ?? new Set<ExecutionHostId>()
+      hostIds.add((setup.hostId ?? LOCAL_EXECUTION_HOST_ID) as ExecutionHostId)
+      hostIdsByProjectId.set(setup.projectId, hostIds)
+    }
+    return projectHostSetupProjection.projects
+      .map((project) => ({
+        id: project.id,
+        label: project.displayName,
+        hostIds: [...(hostIdsByProjectId.get(project.id) ?? new Set<ExecutionHostId>())]
+      }))
+      .sort((left, right) => left.label.localeCompare(right.label))
+  }, [projectHostSetupProjection.projects, projectHostSetupProjection.setups])
   const externalTmuxSessionGroups = useMemo(
     () =>
       buildExternalTmuxSessionSections({
@@ -6912,6 +6947,7 @@ const WorktreeList = React.memo(function WorktreeList({
         handleKeepNewExternalWorktreeInboxHidden={handleKeepNewExternalWorktreeInboxHidden}
         handleOpenSuppressExternalWorktreeInbox={handleOpenSuppressExternalWorktreeInbox}
         newExternalWorktreeInboxActionState={newExternalWorktreeInboxActionState}
+        externalTmuxProjectOptions={externalTmuxProjectOptions}
         setExternalTmuxSessionProjectPlacement={setExternalTmuxSessionProjectPlacement}
         handleRemoveProject={handleRemoveProject}
         handleCreateGroupFromRepo={handleCreateGroupFromRepo}

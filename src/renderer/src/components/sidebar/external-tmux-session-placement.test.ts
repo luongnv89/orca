@@ -17,6 +17,7 @@ function tmuxSession(overrides: Partial<ExternalTmuxSession>): ExternalTmuxSessi
     id: 'tmux-1',
     sessionId: '$1',
     sessionName: 'agent',
+    sessionCreated: '1',
     hostId: 'local',
     discoveredAt: 1,
     paneCurrentPaths: [],
@@ -106,8 +107,9 @@ describe('external tmux session placement', () => {
     ).toBeNull()
   })
 
-  it('lets manual placement override automatic cwd matching', () => {
+  it('lets manual placement override automatic cwd matching on the same host', () => {
     const targetProject = { ...project, id: 'project-2', displayName: 'Project Two' }
+    const targetSetup = { ...setup, id: 'setup-2', projectId: targetProject.id }
     const session = tmuxSession({ paneCurrentPaths: ['/workspace/project-one/src'] })
 
     expect(
@@ -117,10 +119,33 @@ describe('external tmux session placement', () => {
           [session.id]: { sessionId: session.id, projectId: targetProject.id, assignedAt: 2 }
         },
         projects: [project, targetProject],
-        projectHostSetups: [setup],
+        projectHostSetups: [setup, targetSetup],
         worktrees: []
       })
     ).toBe(targetProject.id)
+  })
+
+  it('ignores manual placement across host identities', () => {
+    const targetProject = { ...project, id: 'project-2', displayName: 'Remote Project' }
+    const targetSetup = {
+      ...setup,
+      id: 'setup-2',
+      projectId: targetProject.id,
+      hostId: 'ssh:remote' as const
+    }
+    const session = tmuxSession({ paneCurrentPaths: ['/workspace/project-one/src'] })
+
+    expect(
+      resolveExternalTmuxSessionProjectId({
+        session,
+        placements: {
+          [session.id]: { sessionId: session.id, projectId: targetProject.id, assignedAt: 2 }
+        },
+        projects: [project, targetProject],
+        projectHostSetups: [setup, targetSetup],
+        worktrees: []
+      })
+    ).toBe(project.id)
   })
 
   it('builds visible project and unclassified sections', () => {
