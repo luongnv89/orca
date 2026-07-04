@@ -26,6 +26,8 @@ type ExternalTmuxSessionRowProps = {
   depth?: number
   currentProjectId: string | null
   projectOptions: readonly ExternalTmuxSessionProjectOption[]
+  onDragSessionStart?: () => void
+  onDragSessionEnd?: () => void
   onMoveToProject: (sessionId: string, projectId: string | null) => void
 }
 
@@ -63,6 +65,8 @@ export default function ExternalTmuxSessionRow({
   depth = 0,
   currentProjectId,
   projectOptions,
+  onDragSessionStart,
+  onDragSessionEnd,
   onMoveToProject
 }: ExternalTmuxSessionRowProps) {
   const didDragRef = useRef(false)
@@ -104,11 +108,13 @@ export default function ExternalTmuxSessionRow({
         didDragRef.current = true
         event.dataTransfer.setData(EXTERNAL_TMUX_SESSION_DRAG_TYPE, session.id)
         event.dataTransfer.effectAllowed = 'move'
+        onDragSessionStart?.()
       }}
       // Why: without this, a cancelled/completed drag leaves didDragRef stuck
       // true and the next click is silently swallowed by handleOpenSession.
       onDragEnd={() => {
         didDragRef.current = false
+        onDragSessionEnd?.()
       }}
       className={cn(
         'group mx-2 rounded-md border border-transparent px-2 py-1.5 text-worktree-sidebar-foreground',
@@ -167,21 +173,26 @@ export default function ExternalTmuxSessionRow({
               </>
             ) : null}
             {projectOptions.length > 0 ? (
-              projectOptions.map((project) => (
-                <DropdownMenuItem
-                  key={project.id}
-                  disabled={project.id === currentProjectId}
-                  onSelect={() => onMoveToProject(session.id, project.id)}
-                >
-                  {project.id === currentProjectId
+              projectOptions.map((project) => {
+                const label =
+                  project.id === currentProjectId
                     ? translate(
                         'auto.components.sidebar.ExternalTmuxSessionRow.currentProjectLabel',
                         'Current: {{projectLabel}}',
                         { projectLabel: project.label }
                       )
-                    : project.label}
-                </DropdownMenuItem>
-              ))
+                    : project.label
+                return (
+                  <DropdownMenuItem
+                    key={project.id}
+                    disabled={project.id === currentProjectId}
+                    onSelect={() => onMoveToProject(session.id, project.id)}
+                    title={label}
+                  >
+                    <span className="min-w-0 truncate">{label}</span>
+                  </DropdownMenuItem>
+                )
+              })
             ) : (
               <DropdownMenuItem disabled>
                 {translate(

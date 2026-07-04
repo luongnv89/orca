@@ -39,13 +39,13 @@ function sessionMatchesHost(
   return session.hostId === (hostId ?? LOCAL_EXECUTION_HOST_ID)
 }
 
-function projectHasHostSetup(
-  projectId: string,
-  session: ExternalTmuxSession,
+export function canProjectHostExternalTmuxSession(args: {
+  projectId: string
+  session: ExternalTmuxSession
   projectHostSetups: readonly ProjectHostSetup[]
-): boolean {
-  return projectHostSetups.some(
-    (setup) => setup.projectId === projectId && sessionMatchesHost(session, setup.hostId)
+}): boolean {
+  return args.projectHostSetups.some(
+    (setup) => setup.projectId === args.projectId && sessionMatchesHost(args.session, setup.hostId)
   )
 }
 
@@ -83,11 +83,19 @@ export function resolveExternalTmuxSessionProjectId(args: {
   projectHostSetups: readonly ProjectHostSetup[]
   worktrees: readonly Worktree[]
 }): string | null {
-  const manualProjectId = args.placements[args.session.id]?.projectId
+  const manualPlacement = args.placements[args.session.id]
+  if (manualPlacement?.projectId === null) {
+    return null
+  }
+  const manualProjectId = manualPlacement?.projectId
   if (
     manualProjectId &&
     args.projects.some((project) => project.id === manualProjectId) &&
-    projectHasHostSetup(manualProjectId, args.session, args.projectHostSetups)
+    canProjectHostExternalTmuxSession({
+      projectId: manualProjectId,
+      session: args.session,
+      projectHostSetups: args.projectHostSetups
+    })
   ) {
     return manualProjectId
   }

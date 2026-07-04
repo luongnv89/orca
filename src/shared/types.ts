@@ -145,7 +145,7 @@ export type ExternalTmuxSession = {
 
 export type ExternalTmuxSessionPlacement = {
   sessionId: string
-  projectId: string
+  projectId: string | null
   assignedAt: number
 }
 

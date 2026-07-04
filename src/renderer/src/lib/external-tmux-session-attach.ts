@@ -107,15 +107,13 @@ export async function openExternalTmuxSessionInTerminal(
   const projects = state.projects ?? []
   const placements = state.externalTmuxSessionPlacements ?? {}
 
-  const projectIdHint =
-    placements[session.id]?.projectId ??
-    resolveExternalTmuxSessionProjectId({
-      session,
-      placements,
-      projects,
-      projectHostSetups,
-      worktrees
-    })
+  const projectIdHint = resolveExternalTmuxSessionProjectId({
+    session,
+    placements,
+    projects,
+    projectHostSetups,
+    worktrees
+  })
 
   const worktreeId = resolveWorktreeIdForExternalTmuxSession({
     session,

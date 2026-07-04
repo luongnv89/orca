@@ -9,6 +9,7 @@ import type {
 import {
   UNCLASSIFIED_EXTERNAL_TMUX_SECTION_KEY,
   buildExternalTmuxSessionSections,
+  canProjectHostExternalTmuxSession,
   resolveExternalTmuxSessionProjectId
 } from './external-tmux-session-placement'
 
@@ -125,6 +126,22 @@ describe('external tmux session placement', () => {
     ).toBe(targetProject.id)
   })
 
+  it('keeps explicit unclassified placement out of cwd-based project matching', () => {
+    const session = tmuxSession({ paneCurrentPaths: ['/workspace/project-one/src'] })
+
+    expect(
+      resolveExternalTmuxSessionProjectId({
+        session,
+        placements: {
+          [session.id]: { sessionId: session.id, projectId: null, assignedAt: 2 }
+        },
+        projects: [project],
+        projectHostSetups: [setup],
+        worktrees: []
+      })
+    ).toBeNull()
+  })
+
   it('ignores manual placement across host identities', () => {
     const targetProject = { ...project, id: 'project-2', displayName: 'Remote Project' }
     const targetSetup = {
@@ -146,6 +163,26 @@ describe('external tmux session placement', () => {
         worktrees: []
       })
     ).toBe(project.id)
+  })
+
+  it('checks project host compatibility for external tmux placement targets', () => {
+    const localSession = tmuxSession({ hostId: 'local' })
+    const remoteSession = tmuxSession({ hostId: 'ssh:remote' })
+
+    expect(
+      canProjectHostExternalTmuxSession({
+        projectId: project.id,
+        session: localSession,
+        projectHostSetups: [setup]
+      })
+    ).toBe(true)
+    expect(
+      canProjectHostExternalTmuxSession({
+        projectId: project.id,
+        session: remoteSession,
+        projectHostSetups: [setup]
+      })
+    ).toBe(false)
   })
 
   it('builds visible project and unclassified sections', () => {

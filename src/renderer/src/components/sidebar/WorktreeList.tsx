@@ -51,6 +51,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import type {
+  ExternalTmuxSession,
   Worktree,
   Repo,
   FolderWorkspace,
@@ -1332,6 +1333,37 @@ const VirtualizedWorktreeViewport = React.memo(function VirtualizedWorktreeViewp
   const scrollRef = useRef<HTMLDivElement>(null)
   const suppressMeasurementAdjustmentUntilRef = useRef(0)
   const directScrollInputUntilRef = useRef(0)
+  const externalTmuxDragSessionRef = useRef<ExternalTmuxSession | null>(null)
+  const getExternalTmuxDropSession = useCallback(
+    (dataTransfer: DataTransfer): ExternalTmuxSession | null => {
+      const externalSessionId = dataTransfer.getData(EXTERNAL_TMUX_SESSION_DRAG_TYPE)
+      const trackedSession = externalTmuxDragSessionRef.current
+      if (trackedSession && (!externalSessionId || trackedSession.id === externalSessionId)) {
+        return trackedSession
+      }
+      if (!externalSessionId) {
+        return null
+      }
+      for (const row of rows) {
+        if (row.type === 'external-tmux-session' && row.session.id === externalSessionId) {
+          return row.session
+        }
+      }
+      return null
+    },
+    [rows]
+  )
+  const getCompatibleExternalTmuxDropSessionId = useCallback(
+    (projectId: string | null, dataTransfer: DataTransfer): string | null => {
+      if (!projectId || !dataTransfer.types.includes(EXTERNAL_TMUX_SESSION_DRAG_TYPE)) {
+        return null
+      }
+      const session = getExternalTmuxDropSession(dataTransfer)
+      const project = externalTmuxProjectOptions.find((option) => option.id === projectId)
+      return session && project?.hostIds.includes(session.hostId) ? session.id : null
+    },
+    [externalTmuxProjectOptions, getExternalTmuxDropSession]
+  )
   const [dragOverStatus, setDragOverStatus] = useState<WorkspaceStatus | null>(null)
   const [pinDragOver, setPinDragOver] = useState(false)
   const [nativeLineageDropTargetId, setNativeLineageDropTargetId] = useState<string | null>(null)
@@ -4234,8 +4266,10 @@ const VirtualizedWorktreeViewport = React.memo(function VirtualizedWorktreeViewp
                     style={{ paddingLeft: headerPaddingLeft }}
                     onDragOver={(event) => {
                       if (
-                        externalTmuxDropProjectId &&
-                        event.dataTransfer.types.includes(EXTERNAL_TMUX_SESSION_DRAG_TYPE)
+                        getCompatibleExternalTmuxDropSessionId(
+                          externalTmuxDropProjectId,
+                          event.dataTransfer
+                        )
                       ) {
                         event.preventDefault()
                         event.dataTransfer.dropEffect = 'move'
@@ -4257,8 +4291,9 @@ const VirtualizedWorktreeViewport = React.memo(function VirtualizedWorktreeViewp
                           : undefined
                     }
                     onDrop={(event) => {
-                      const externalSessionId = event.dataTransfer.getData(
-                        EXTERNAL_TMUX_SESSION_DRAG_TYPE
+                      const externalSessionId = getCompatibleExternalTmuxDropSessionId(
+                        externalTmuxDropProjectId,
+                        event.dataTransfer
                       )
                       if (externalTmuxDropProjectId && externalSessionId) {
                         event.preventDefault()
@@ -5042,6 +5077,14 @@ const VirtualizedWorktreeViewport = React.memo(function VirtualizedWorktreeViewp
                     projectOptions={externalTmuxProjectOptions.filter((project) =>
                       project.hostIds.includes(row.session.hostId)
                     )}
+                    onDragSessionStart={() => {
+                      externalTmuxDragSessionRef.current = row.session
+                    }}
+                    onDragSessionEnd={() => {
+                      if (externalTmuxDragSessionRef.current?.id === row.session.id) {
+                        externalTmuxDragSessionRef.current = null
+                      }
+                    }}
                     onMoveToProject={setExternalTmuxSessionProjectPlacement}
                   />
                 </div>

@@ -80,6 +80,21 @@ describe('ExternalTmuxSessionRow', () => {
     expect(openExternalTmuxSessionInTerminal).not.toHaveBeenCalled()
   })
 
+  it('truncates long project move labels while preserving the full title', () => {
+    const longLabel = 'A very long localized project name that should not overflow the move menu'
+    renderRow({
+      currentProjectId: 'project-1',
+      projectOptions: [{ id: 'project-1', label: longLabel }]
+    })
+    const trigger = screen.getByRole('button', { name: /move demo-session to a project/i })
+
+    fireEvent.pointerDown(trigger)
+
+    const label = screen.getByText(`Current: ${longLabel}`)
+    expect(label.className).toContain('truncate')
+    expect(label.closest('[role="menuitem"]')?.getAttribute('title')).toBe(`Current: ${longLabel}`)
+  })
+
   it('does not present remote sessions as attach targets while keeping move actions available', () => {
     renderRow({
       session: { ...session, hostId: 'ssh:demo-host' },

@@ -73,7 +73,7 @@ describe('createExternalTmuxSessionsSlice', () => {
     expect(store.getState().externalTmuxSessionsById['tmux-1']).toBeUndefined()
   })
 
-  it('persists manual project placement overrides', () => {
+  it('persists manual project and unclassified placement overrides', () => {
     const store = createTestStore()
 
     store.getState().setExternalTmuxSessionProjectPlacement('tmux-1', 'project-1')
@@ -89,7 +89,14 @@ describe('createExternalTmuxSessionsSlice', () => {
 
     store.getState().setExternalTmuxSessionProjectPlacement('tmux-1', null)
 
-    expect(store.getState().externalTmuxSessionPlacements).toEqual({})
+    expect(store.getState().externalTmuxSessionPlacements).toEqual({
+      'tmux-1': expect.objectContaining({ sessionId: 'tmux-1', projectId: null })
+    })
+    expect(persistUI).toHaveBeenLastCalledWith({
+      externalTmuxSessionPlacements: {
+        'tmux-1': expect.objectContaining({ sessionId: 'tmux-1', projectId: null })
+      }
+    })
   })
 
   it('normalizes persisted placement payloads', () => {
@@ -97,10 +104,28 @@ describe('createExternalTmuxSessionsSlice', () => {
       sanitizeExternalTmuxSessionPlacements({
         'tmux-1': { sessionId: 'tmux-1', projectId: 'project-1', assignedAt: 10 },
         'tmux-2': { sessionId: 'wrong', projectId: 'project-2' },
-        'tmux-3': { sessionId: 'tmux-3', projectId: '' }
+        'tmux-3': { sessionId: 'tmux-3', projectId: '' },
+        'tmux-4': { sessionId: 'tmux-4', projectId: null, assignedAt: 11 }
       })
     ).toEqual({
-      'tmux-1': { sessionId: 'tmux-1', projectId: 'project-1', assignedAt: 10 }
+      'tmux-1': { sessionId: 'tmux-1', projectId: 'project-1', assignedAt: 10 },
+      'tmux-4': { sessionId: 'tmux-4', projectId: null, assignedAt: 11 }
+    })
+  })
+
+  it('rejects prototype-polluting placement keys', () => {
+    const sanitized = sanitizeExternalTmuxSessionPlacements(
+      JSON.parse(
+        '{"__proto__":{"sessionId":"__proto__","projectId":"polluted"},"constructor":{"sessionId":"constructor","projectId":"polluted"},"prototype":{"sessionId":"prototype","projectId":"polluted"},"tmux-1":{"sessionId":"tmux-1","projectId":"project-1"}}'
+      )
+    )
+
+    expect(Object.getPrototypeOf(sanitized)).toBe(Object.prototype)
+    expect(Object.prototype.hasOwnProperty.call(sanitized, '__proto__')).toBe(false)
+    expect(Object.prototype.hasOwnProperty.call(sanitized, 'constructor')).toBe(false)
+    expect(Object.prototype.hasOwnProperty.call(sanitized, 'prototype')).toBe(false)
+    expect(sanitized).toEqual({
+      'tmux-1': { sessionId: 'tmux-1', projectId: 'project-1', assignedAt: 0 }
     })
   })
 })

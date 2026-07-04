@@ -15,6 +15,10 @@ export type ExternalTmuxSessionsSlice = {
   setExternalTmuxSessionProjectPlacement: (sessionId: string, projectId: string | null) => void
 }
 
+function isUnsafeRecordKey(key: string): boolean {
+  return key === '__proto__' || key === 'constructor' || key === 'prototype'
+}
+
 export function sanitizeExternalTmuxSessionPlacements(
   value: unknown
 ): ExternalTmuxSessionPlacements {
@@ -23,21 +27,31 @@ export function sanitizeExternalTmuxSessionPlacements(
   }
   const placements: ExternalTmuxSessionPlacements = {}
   for (const [key, rawPlacement] of Object.entries(value)) {
+    // Why: persisted UI state is user-tamperable; these keys mutate object
+    // prototypes when assigned into plain records.
+    if (isUnsafeRecordKey(key)) {
+      continue
+    }
     if (!rawPlacement || typeof rawPlacement !== 'object' || Array.isArray(rawPlacement)) {
       continue
     }
     const placement = rawPlacement as Partial<ExternalTmuxSessionPlacement>
+    const projectId =
+      placement.projectId === null
+        ? null
+        : typeof placement.projectId === 'string' && placement.projectId.trim().length > 0
+          ? placement.projectId
+          : undefined
     if (
       typeof placement.sessionId !== 'string' ||
       placement.sessionId !== key ||
-      typeof placement.projectId !== 'string' ||
-      !placement.projectId.trim()
+      projectId === undefined
     ) {
       continue
     }
     placements[key] = {
       sessionId: placement.sessionId,
-      projectId: placement.projectId,
+      projectId,
       assignedAt: typeof placement.assignedAt === 'number' ? placement.assignedAt : 0
     }
   }
@@ -105,16 +119,15 @@ export const createExternalTmuxSessionsSlice: StateCreator<
     },
 
     setExternalTmuxSessionProjectPlacement: (sessionId, projectId) => {
-      if (!sessionId) {
+      if (!sessionId || isUnsafeRecordKey(sessionId)) {
+        return
+      }
+      if (projectId !== null && !projectId.trim()) {
         return
       }
       const current = get().externalTmuxSessionPlacements
       const next = { ...current }
-      if (!projectId) {
-        delete next[sessionId]
-      } else {
-        next[sessionId] = { sessionId, projectId, assignedAt: Date.now() }
-      }
+      next[sessionId] = { sessionId, projectId, assignedAt: Date.now() }
       set({ externalTmuxSessionPlacements: next })
       void window.api.ui.set({ externalTmuxSessionPlacements: next }).catch(console.error)
     }
