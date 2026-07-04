@@ -25,13 +25,20 @@ const session: ExternalTmuxSession = {
   panes: []
 }
 
-function renderRow(): ReturnType<typeof render> {
+function renderRow(
+  overrides: Partial<{
+    session: ExternalTmuxSession
+    currentProjectId: string | null
+    projectOptions: { id: string; label: string }[]
+    onMoveToProject: (sessionId: string, projectId: string | null) => void
+  }> = {}
+): ReturnType<typeof render> {
   return render(
     <ExternalTmuxSessionRow
-      session={session}
-      currentProjectId={null}
-      projectOptions={[]}
-      onMoveToProject={vi.fn()}
+      session={overrides.session ?? session}
+      currentProjectId={overrides.currentProjectId ?? null}
+      projectOptions={overrides.projectOptions ?? []}
+      onMoveToProject={overrides.onMoveToProject ?? vi.fn()}
     />
   )
 }
@@ -71,6 +78,23 @@ describe('ExternalTmuxSessionRow', () => {
     fireEvent.keyDown(trigger, { key: 'Enter' })
 
     expect(openExternalTmuxSessionInTerminal).not.toHaveBeenCalled()
+  })
+
+  it('does not present remote sessions as attach targets while keeping move actions available', () => {
+    renderRow({
+      session: { ...session, hostId: 'ssh:demo-host' },
+      projectOptions: [{ id: 'project-1', label: 'Demo Project' }]
+    })
+    const row = screen.getByRole('option')
+    const trigger = screen.getByRole('button', { name: /move demo-session to a project/i })
+
+    fireEvent.click(row)
+    fireEvent.keyDown(row, { key: 'Enter' })
+
+    expect(openExternalTmuxSessionInTerminal).not.toHaveBeenCalled()
+    expect(row.getAttribute('aria-description')).toBe('Remote attach is not supported yet.')
+    expect(screen.getByText('Remote attach is not supported yet.')).toBeTruthy()
+    expect((trigger as HTMLButtonElement).disabled).toBe(false)
   })
 })
 

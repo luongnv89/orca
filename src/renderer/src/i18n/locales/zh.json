@@ -4509,6 +4509,17 @@
           "importing": "正在导入...",
           "importSshConfig": "导入 ~/.ssh/config",
           "sshPersistenceDefault": "此主机上的远程终端会保持运行，直到你结束它们或重置中继。"
+        },
+        "ExternalTmuxSessionRow": {
+          "detailFallback": "External tmux session",
+          "sessionLabel": "External tmux session {{sessionName}}",
+          "remoteAttachUnsupportedLabel": "External tmux session {{sessionName}}. Remote attach is not supported yet.",
+          "remoteAttachUnsupported": "Remote attach is not supported yet.",
+          "tmuxBadge": "tmux",
+          "moveToProjectAriaLabel": "Move {{sessionName}} to a project",
+          "moveToUnclassified": "Move to unclassified",
+          "currentProjectLabel": "Current: {{projectLabel}}",
+          "noProjectsAvailable": "No projects available"
         }
       },
       "shared": {

@@ -4509,6 +4509,17 @@
           "importing": "インポート中...",
           "importSshConfig": "~/.ssh/config をインポートします",
           "sshPersistenceDefault": "このホスト上のリモートターミナルは、終了するかリレーをリセットするまで動作し続けます。"
+        },
+        "ExternalTmuxSessionRow": {
+          "detailFallback": "External tmux session",
+          "sessionLabel": "External tmux session {{sessionName}}",
+          "remoteAttachUnsupportedLabel": "External tmux session {{sessionName}}. Remote attach is not supported yet.",
+          "remoteAttachUnsupported": "Remote attach is not supported yet.",
+          "tmuxBadge": "tmux",
+          "moveToProjectAriaLabel": "Move {{sessionName}} to a project",
+          "moveToUnclassified": "Move to unclassified",
+          "currentProjectLabel": "Current: {{projectLabel}}",
+          "noProjectsAvailable": "No projects available"
         }
       },
       "shared": {
