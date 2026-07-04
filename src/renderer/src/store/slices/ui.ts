@@ -2,6 +2,7 @@
 import type { StateCreator } from 'zustand'
 import type { AppState } from '../types'
 import { normalizeRightSidebarRoute } from '../right-sidebar-route'
+import { sanitizeExternalTmuxSessionPlacements } from './external-tmux-sessions'
 import {
   findPrevLiveNonTaskStackHistoryIndex,
   findPrevLiveWorktreeHistoryIndex
@@ -2353,6 +2354,9 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (set, get)
         // the in-session cleanup in agent-status.ts can't accumulate forever.
         acknowledgedAgentsByPaneKey: sanitizeAcknowledgedAgentsByPaneKey(
           ui.acknowledgedAgentsByPaneKey
+        ),
+        externalTmuxSessionPlacements: sanitizeExternalTmuxSessionPlacements(
+          ui.externalTmuxSessionPlacements
         ),
         workspaceCleanupDismissals: sanitizeWorkspaceCleanupDismissals(
           ui.workspaceCleanup?.dismissals

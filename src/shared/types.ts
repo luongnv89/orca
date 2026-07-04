@@ -123,6 +123,34 @@ export type ProjectUpdateArgs = {
   updates: Partial<Pick<Project, 'localWindowsRuntimePreference'>>
 }
 
+export type ExternalTmuxSessionPane = {
+  paneId: string
+  windowId: string | null
+  windowName: string | null
+  currentPath: string | null
+  currentCommand: string | null
+  active: boolean
+}
+
+export type ExternalTmuxSession = {
+  id: string
+  sessionId: string
+  sessionName: string
+  sessionCreated: string
+  hostId: ExecutionHostId
+  discoveredAt: number
+  paneCurrentPaths: string[]
+  panes: ExternalTmuxSessionPane[]
+}
+
+export type ExternalTmuxSessionPlacement = {
+  sessionId: string
+  projectId: string | null
+  assignedAt: number
+}
+
+export type ExternalTmuxSessionPlacements = Record<string, ExternalTmuxSessionPlacement>
+
 export type ProjectHostSetupState = 'ready' | 'not-set-up' | 'setting-up' | 'error' | 'unsupported'
 export type ProjectHostSetupMethod =
   | 'legacy-repo'
@@ -3239,6 +3267,8 @@ export type PersistedUIState = {
    *  stateStartedAt that beats the old ack via the existing comparison in
    *  WorktreeCardAgents. Renderer-owned, written through ui:set. */
   acknowledgedAgentsByPaneKey?: Record<string, number>
+  /** Manual project placements for discovered external tmux sessions. */
+  externalTmuxSessionPlacements?: ExternalTmuxSessionPlacements
   /** User-hidden sidebar entry for the setup guide. The Help menu remains
    *  available so this is a reversible declutter preference, not completion. */
   setupGuideSidebarDismissed?: boolean

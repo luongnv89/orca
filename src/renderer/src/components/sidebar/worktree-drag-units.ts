@@ -12,6 +12,7 @@ type WorktreeDragUnitRow =
   | { type: 'imported-worktrees-card' }
   | { type: 'new-external-worktrees-inbox' }
   | { type: 'pending-creation' }
+  | { type: 'external-tmux-session' }
   | { type: 'folder-workspace' }
 
 export function getWorktreeDragUnitGroups(
@@ -35,6 +36,7 @@ export function getWorktreeDragUnitGroups(
       row.type === 'imported-worktrees-card' ||
       row.type === 'new-external-worktrees-inbox' ||
       row.type === 'pending-creation' ||
+      row.type === 'external-tmux-session' ||
       row.type === 'folder-workspace'
     ) {
       continue

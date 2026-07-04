@@ -2578,6 +2578,7 @@ function createPtyApi(): NonNullable<Partial<PreloadApi>['pty']> {
     clearPendingPaneSerializer: () => Promise.resolve(),
     management: {
       listSessions: () => Promise.resolve({ sessions: [], degraded: false }),
+      listExternalTmuxSessions: () => Promise.resolve([]),
       killAll: () => Promise.resolve({ killedCount: 0, remainingCount: 0 }),
       killOne: () => Promise.resolve({ success: false }),
       restart: () => Promise.resolve({ success: false })

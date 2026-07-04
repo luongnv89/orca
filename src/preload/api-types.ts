@@ -118,6 +118,7 @@ import type {
   LinearTeam,
   MarkdownDocument,
   FloatingTerminalCwdRequest,
+  ExternalTmuxSession,
   GitHubIssueUpdate,
   GitHubPRRefreshCandidate,
   GitHubPRRefreshEnqueueResult,
@@ -611,6 +612,7 @@ export type PtyManagementApi = {
   // `degraded` is true when the daemon is alive but cannot spawn fresh PTYs, so
   // new terminals run on the local provider without daemon persistence.
   listSessions: () => Promise<{ sessions: PtyManagementSession[]; degraded: boolean }>
+  listExternalTmuxSessions: () => Promise<ExternalTmuxSession[]>
   killAll: () => Promise<{ killedCount: number; remainingCount: number }>
   killOne: (args: { sessionId: string }) => Promise<{ success: boolean }>
   restart: () => Promise<{ success: boolean }>

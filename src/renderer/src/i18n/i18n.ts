@@ -74,7 +74,10 @@ void i18n
 
 export function translate(key: string, fallback: string, options?: TOptions): string {
   const value = i18n.t(key, { defaultValue: fallback, ...options })
-  return isPseudoLocalizationLocale(i18n.language) ? pseudoLocalizeString(value) : value
+  // Why: a mistyped key can make i18next return a nested object; rendering that
+  // in UI/toasts dumps raw JSON (often looks like locale-file garbage).
+  const text = typeof value === 'string' ? value : fallback
+  return isPseudoLocalizationLocale(i18n.language) ? pseudoLocalizeString(text) : text
 }
 
 export async function setRendererUiLanguage(language: UiLanguage): Promise<void> {

@@ -2020,16 +2020,16 @@ describe('createPtySubprocess', () => {
       }
     }
 
-    expect(spawnMock).toHaveBeenCalledWith(
-      'wsl.exe',
-      expect.any(Array),
-      expect.objectContaining({
-        env: expect.objectContaining({
-          ORCA_TERMINAL_HANDLE: 'term_wsl',
-          WSLENV: 'FOO/u:ORCA_TERMINAL_HANDLE/u:POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD'
-        })
-      })
-    )
+    const spawnOptions = spawnMock.mock.calls[0]?.[2] as
+      | { env?: Record<string, string> }
+      | undefined
+    const wslEnv = spawnOptions?.env?.WSLENV ?? ''
+    // Why: WSLENV appends Orca agent-hook /p and /u segments when those vars are
+    // present in the host environment; assert required imports without pinning CI
+    // to a developer machine's hook configuration.
+    expect(spawnOptions?.env?.ORCA_TERMINAL_HANDLE).toBe('term_wsl')
+    expect(wslEnv).toMatch(/^FOO\/u:ORCA_TERMINAL_HANDLE\/u/)
+    expect(wslEnv).toContain('POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD')
   })
 
   it('does not mark deleted Powerlevel10k wizard env for daemon WSL import', () => {

@@ -541,6 +541,11 @@
       },
       "ephemeralVmWorkspaceTarget": {
         "projectRootRegistrationFailed": "Failed to register the recipe-created project root on the runtime."
+      },
+      "externalTmuxSessionAttach": {
+        "remoteUnsupported": "Attaching to tmux on remote hosts is not supported yet.",
+        "noWorkspace": "Open a project workspace first, then attach to this tmux session.",
+        "attachFailed": "Could not open a terminal to attach to {{sessionName}}."
       }
     },
     "hooks": {
@@ -4504,6 +4509,17 @@
           "sshImportFailed": "Failed to import SSH config.",
           "importing": "Importing...",
           "importSshConfig": "Import ~/.ssh/config"
+        },
+        "ExternalTmuxSessionRow": {
+          "detailFallback": "External tmux session",
+          "sessionLabel": "External tmux session {{sessionName}}",
+          "remoteAttachUnsupportedLabel": "External tmux session {{sessionName}}. Remote attach is not supported yet.",
+          "remoteAttachUnsupported": "Remote attach is not supported yet.",
+          "tmuxBadge": "tmux",
+          "moveToProjectAriaLabel": "Move {{sessionName}} to a project",
+          "moveToUnclassified": "Move to unclassified",
+          "currentProjectLabel": "Current: {{projectLabel}}",
+          "noProjectsAvailable": "No projects available"
         }
       },
       "shared": {
